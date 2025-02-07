@@ -11,4 +11,10 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\BrainHope.DataAcess\BrainHope.DataAcess.csproj" />
+    <ProjectReference Include="..\BrainHope.Services\BrainHope.Services.csproj" />
+    <ProjectReference Include="..\Utilites\Utilites.csproj" />
+  </ItemGroup>
+
 </Project>
