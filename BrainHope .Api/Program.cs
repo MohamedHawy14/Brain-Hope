@@ -1,6 +1,9 @@
 
 using BrainHope.DataAcess.Contexts;
 using BrainHope.DataAcess.Models;
+using BrainHope.Services.DTO.Email;
+using BrainHope.Services.InterFaces;
+using BrainHope.Services.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -24,12 +27,41 @@ namespace BrainHope_.Api
 
             //Add Authentication
 
+            #region JWT
             builder.Services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-            });
+               {
+                   options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                   options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                   options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+               }).AddJwtBearer(
+                  options =>
+                  {
+                      options.SaveToken = true;
+                      options.RequireHttpsMetadata = false;
+                      options.TokenValidationParameters = new TokenValidationParameters()
+                      {
+                          ValidateIssuerSigningKey = true,
+                          ValidateLifetime = true,
+                          ValidateIssuer = true,
+                          ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
+                          ValidateAudience = true,
+                          ValidAudience = builder.Configuration["JWT:ValidAudience"],
+                          IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secert"]))
+                      };
+
+                  }
+                  ); 
+            #endregion
+
+            #region Email
+            var Configure = builder.Configuration;
+            var emailconfig = Configure.GetSection("EmailConfiguration").Get<EmailConfiguration>();
+            builder.Services.AddSingleton(emailconfig);
+            builder.Services.AddScoped<IEmailService, EmailService>();
+            builder.Services.Configure<IdentityOptions>(opts => opts.SignIn.RequireConfirmedEmail = true);
+            #endregion
+
+            builder.Services.Configure<DataProtectionTokenProviderOptions>(opts => opts.TokenLifespan = TimeSpan.FromMinutes(45));
 
 
             // Add services to the container.
