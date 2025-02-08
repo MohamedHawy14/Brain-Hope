@@ -7,9 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="DTO\" />
+    <Folder Include="DTO\Authentication\SignIn\" />
     <Folder Include="InterFaces\" />
     <Folder Include="Services\" />
+   
   </ItemGroup>
 
   <ItemGroup>
