@@ -27,7 +27,9 @@ namespace BrainHope.Services.DTO.Authentication.SingUp
 
         [Required(ErrorMessage = "National ID is required.")]
         [StringLength(14, MinimumLength = 14, ErrorMessage = "National ID must be exactly 14 characters.")]
-        public string NationalId { get; set; } 
+        public string NationalId { get; set; }
+
+        public List<string>? Roles { get; set; }
 
     }
 }

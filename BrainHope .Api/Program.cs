@@ -25,6 +25,7 @@ namespace BrainHope_.Api
             //For Identity
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<BrainHopeDbContext>().AddDefaultTokenProviders();
 
+
             //Add Authentication
 
             #region JWT
@@ -65,6 +66,8 @@ namespace BrainHope_.Api
 
 
             // Add services to the container.
+            builder.Services.AddScoped<IAuthServices, AuthServices>();
+
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

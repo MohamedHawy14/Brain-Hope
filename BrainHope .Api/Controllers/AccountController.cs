@@ -26,89 +26,51 @@ namespace BrainHope_.Api.Controllers
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly IAuthServices _authServices;
 
         public AccountController(UserManager<ApplicationUser> userManager ,
             RoleManager<IdentityRole> roleManager,
             IEmailService emailService,
             IConfiguration configuration,
-            SignInManager<ApplicationUser> signInManager)
+            SignInManager<ApplicationUser> signInManager,
+            IAuthServices authServices)
         {
             this._userManager = userManager;
             this._roleManager = roleManager;
             this._emailService = emailService;
             this._configuration = configuration;
             this._signInManager = signInManager;
+            this._authServices = authServices;
         }
 
         [HttpPost("Register")]
-        public async Task<IActionResult> Register([FromBody] RegisterUser registerUser , string role)
+
+        public async Task<IActionResult> Register([FromBody] RegisterUser registerUser)
         {
-            //Check Exist User
-            var existuser = await _userManager.FindByEmailAsync(registerUser.Email);
-            if(existuser != null)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden,
-                    new Response { Status = "Error", Message = "User Already Exist!." });
-            }
-            var existUserByUsername = await _userManager.FindByNameAsync(registerUser.UserName);
-            if (existUserByUsername != null)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden,
-                    new Response { Status = "Error", Message = "Username is already taken!." });
-            }
-            var existUserByNationalId = await _userManager.Users
-                .FirstOrDefaultAsync(u => u.NationalId == registerUser.NationalId);
+            var tokenResponse = await _authServices.CreateUserWithTokenAsync(registerUser);
 
-            if (existUserByNationalId != null)
+            // If user creation failed, return error response
+            if (!tokenResponse.IsSuccess)
             {
-                return StatusCode(StatusCodes.Status403Forbidden,
-                    new Response { Status = "Error", Message = "National ID is already registered!." });
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new Response { Message = tokenResponse.Message, IsSuccess = false });
             }
 
-            //Add User To DB
-            ApplicationUser user = new() 
-            { 
-                Email=registerUser.Email,
-                UserName=registerUser.UserName,
-                NationalId=registerUser.NationalId,
-                SecurityStamp=Guid.NewGuid().ToString(),
-                TwoFactorEnabled=true
-            
-            };
-            if(await _roleManager.RoleExistsAsync(role))
-            {
-                var result = await _userManager.CreateAsync(user, registerUser.Password);
-                if (!result.Succeeded)
-                {
-                    return StatusCode(StatusCodes.Status403Forbidden,
-                        new Response { Status = "Error", Message = "User Failed To Created!." });
+            // Assign roles to user
+            await _authServices.AssignRoleToUserAsync(registerUser.Roles, tokenResponse.Response.User);
 
+            // Generate email confirmation link
+            var confirmationLink = Url.Action(nameof(ConfirmEmail), "Account",
+                new { token = tokenResponse.Response.Token, email = registerUser.Email }, Request.Scheme);
 
-                }
-                //Add Role To user 
-                await _userManager.AddToRoleAsync(user, role);
+            var message = new Message(new string[] { registerUser.Email! }, "Confirmation Email Link", confirmationLink!);
+            _emailService.SendEmail(message);
 
-                //Add Verify Token Email 
-                var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                var confirmationlink = Url.Action(nameof(ConfirmEmail), "Account", new { token, email = user.Email }, Request.Scheme);
-                var message = new Message(new string[] { user.Email! }, "Confirmation Email Link", confirmationlink!);
-                _emailService.SendEmail(message);
-
-                return   StatusCode(StatusCodes.Status200OK,
-                        new Response { Status = "Success", Message = $"User Created Successfully. & Email Sent To {user.Email} Successfully." });
-            }
-            else
-            {
-                return StatusCode(StatusCodes.Status403Forbidden,
-                   new Response { Status = "Error", Message = "This Role Is Not Exist!." });
-            }
-
-
-
-
-
-          
+            return StatusCode(StatusCodes.Status200OK,
+                new Response { Status = "Success", Message = $"User Created Successfully & Email Sent To {registerUser.Email} Successfully.", IsSuccess = true });
         }
+
+
 
         [HttpGet("ConfirmEmail")]
         public async Task<IActionResult> ConfirmEmail(string token, string email)
@@ -120,7 +82,7 @@ namespace BrainHope_.Api.Controllers
                 if (result.Succeeded)
                 {
                     return StatusCode(StatusCodes.Status200OK,
-                   new Response { Status = "Success", Message = "Email Verified Successfully." });
+                   new Response { Status = "Success", Message = "Email Verified Successfully." , IsSuccess = true });
                 }
 
             }
