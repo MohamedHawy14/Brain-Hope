@@ -1,5 +1,6 @@
 ﻿using BrainHope.DataAcess.Models;
 using BrainHope.Services.DTO;
+using BrainHope.Services.DTO.Authentication.SignIn;
 using BrainHope.Services.DTO.Authentication.SingUp;
 using BrainHope.Services.DTO.Authentication.User;
 using BrainHope.Services.DTO.Email;
@@ -105,6 +106,57 @@ namespace BrainHope.Services.Services
 
             }
 
+        }
+
+        public async Task<ApiResponse<LoginOtpResponse>> GetOtpByLoginAsync(SignInDTO signInDTO)
+        {
+            var user = await _userManager.FindByEmailAsync(signInDTO.Email);
+            if (user != null)
+            {
+                await _signInManager.SignOutAsync();
+                await _signInManager.PasswordSignInAsync(user, signInDTO.Password, false, true);
+                if (user.TwoFactorEnabled)
+                {
+                    var token = await _userManager.GenerateTwoFactorTokenAsync(user, "Email");
+                    return new ApiResponse<LoginOtpResponse>
+                    {
+                        Response = new LoginOtpResponse()
+                        {
+                            User = user,
+                            Token = token,
+                            IsTwoFactorEnable = user.TwoFactorEnabled
+                        },
+                        IsSuccess = true,
+                        StatusCode = 200,
+                        Message = $"OTP send to the email {user.Email}"
+                    };
+
+                }
+                else
+                {
+                    return new ApiResponse<LoginOtpResponse>
+                    {
+                        Response = new LoginOtpResponse()
+                        {
+                            User = user,
+                            Token = string.Empty,
+                            IsTwoFactorEnable = user.TwoFactorEnabled
+                        },
+                        IsSuccess = true,
+                        StatusCode = 200,
+                        Message = $"2FA is not enabled"
+                    };
+                }
+            }
+            else
+            {
+                return new ApiResponse<LoginOtpResponse>
+                {
+                    IsSuccess = false,
+                    StatusCode = 404,
+                    Message = $"User doesn't exist."
+                };
+            }
         }
     }
 }
