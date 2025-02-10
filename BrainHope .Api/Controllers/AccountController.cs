@@ -2,6 +2,7 @@
 using BrainHope.Services.DTO;
 using BrainHope.Services.DTO.Authentication.SignIn;
 using BrainHope.Services.DTO.Authentication.SingUp;
+using BrainHope.Services.DTO.Authentication.User;
 using BrainHope.Services.DTO.Email;
 using BrainHope.Services.InterFaces;
 using Microsoft.AspNetCore.Authorization;
@@ -96,45 +97,25 @@ namespace BrainHope_.Api.Controllers
         {
 
             var loginOtpResponse = await _authServices.GetOtpByLoginAsync(signInDTO);
-            if (loginOtpResponse.Response != null) 
+            if (loginOtpResponse.Response != null)
             {
                 var user = loginOtpResponse.Response.User;
                 if (user.TwoFactorEnabled)
                 {
-
                     var token = loginOtpResponse.Response.Token;
-
                     var message = new Message(new string[] { user.Email! }, "OTP Confrimation", token);
                     _emailService.SendEmail(message);
 
                     return StatusCode(StatusCodes.Status200OK,
-                     new Response {IsSuccess=loginOtpResponse.IsSuccess, Status = "Success", Message = $"We have sent an OTP to your Email {user.Email}" });
+                     new Response { IsSuccess = loginOtpResponse.IsSuccess, Status = "Success", Message = $"We have sent an OTP to your Email {user.Email}" });
                 }
                 if (user != null && await _userManager.CheckPasswordAsync(user, signInDTO.Password))
                 {
-                    var authclaims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Email,user.Email),
-                    new Claim(JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString()),
-
-                };
-                    var userRoles = await _userManager.GetRolesAsync(user);
-                    foreach (var Role in userRoles)
-                    {
-                        authclaims.Add(new Claim(ClaimTypes.Role, Role));
-                    }
-
-                    var jwtToken = GetToken(authclaims);
-                    return Ok(new
-                    {
-                        token = new JwtSecurityTokenHandler().WriteToken(jwtToken),
-                        expiration = jwtToken.ValidTo
-                    });
-
+                    var serviceResponse = await _authServices.GetJwtTokenAsync(user);
+                    return Ok(serviceResponse);
 
                 }
             }
-            
             return Unauthorized();
 
 
@@ -145,36 +126,13 @@ namespace BrainHope_.Api.Controllers
         [Route("login-2FA")]
         public async Task<IActionResult> LoginWithOTP(string code, string email)
         {
-            var user = await _userManager.FindByEmailAsync(email);
-            var signIn = await _signInManager.TwoFactorSignInAsync("Email", code, false, false);
-            if (signIn.Succeeded)
+            var jwt = await _authServices.LoginUserWithJWTokenAsync(code, email);
+            if (jwt.IsSuccess)
             {
-                if (user != null)
-                {
-                    var authClaims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Email, user.Email),
-                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                };
-                    var userRoles = await _userManager.GetRolesAsync(user);
-                    foreach (var role in userRoles)
-                    {
-                        authClaims.Add(new Claim(ClaimTypes.Role, role));
-                    }
-
-                    var jwtToken = GetToken(authClaims);
-
-                    return Ok(new
-                    {
-                        token = new JwtSecurityTokenHandler().WriteToken(jwtToken),
-                        expiration = jwtToken.ValidTo
-                    });
-                  
-
-                }
+                return Ok(jwt);
             }
             return StatusCode(StatusCodes.Status404NotFound,
-                new Response { Status = "Success", Message = $"Invalid Code" });
+                new Response { Status = "Error", Message = $"Invalid Code" });
         }
 
         [HttpPost("ForgetPassword")]
@@ -227,6 +185,19 @@ namespace BrainHope_.Api.Controllers
             return StatusCode(StatusCodes.Status400BadRequest,
                       new Response { Status = "Error", Message = "SomeThing were Wrong." });
 
+        }
+
+        [HttpPost]
+        [Route("RefreshToken")]
+        public async Task<IActionResult> RefreshToken(LoginResponse tokens)
+        {
+            var jwt = await _authServices.RenewAccessTokenAsync(tokens);
+            if (jwt.IsSuccess)
+            {
+                return Ok(jwt);
+            }
+            return StatusCode(StatusCodes.Status404NotFound,
+                new Response { Status = "Success", Message = $"Invalid Code" });
         }
 
 

@@ -30,28 +30,28 @@ namespace BrainHope_.Api
 
             #region JWT
             builder.Services.AddAuthentication(options =>
-               {
-                   options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                   options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                   options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-               }).AddJwtBearer(
-                  options =>
-                  {
-                      options.SaveToken = true;
-                      options.RequireHttpsMetadata = false;
-                      options.TokenValidationParameters = new TokenValidationParameters()
-                      {
-                          ValidateIssuerSigningKey = true,
-                          ValidateLifetime = true,
-                          ValidateIssuer = true,
-                          ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
-                          ValidateAudience = true,
-                          ValidAudience = builder.Configuration["JWT:ValidAudience"],
-                          IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secert"]))
-                      };
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+ {
+                options.SaveToken = true;
+                options.RequireHttpsMetadata = false;
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                   ValidateIssuerSigningKey = true,
+                   ValidateLifetime = true,
+                   ValidateIssuer = true,
+                   ClockSkew = TimeSpan.Zero,
+                   ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
+                   ValidateAudience = true,
+                   ValidAudience = builder.Configuration["JWT:ValidAudience"],
+                   IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secret"])) // FIXED TYPO
+                };
+            });
 
-                  }
-                  ); 
             #endregion
 
             #region Email

@@ -15,5 +15,8 @@ namespace BrainHope.DataAcess.Models
         [Required(ErrorMessage = "National ID is required.")]
         [StringLength(14, MinimumLength = 14, ErrorMessage = "National ID must be exactly 14 characters.")]
         public string NationalId { get; set; } = string.Empty;
+
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiry { get; set; }
     }
 }
