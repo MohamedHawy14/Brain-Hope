@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -29,7 +30,8 @@ namespace BrainHope.Services.DTO.Authentication.SingUp
         [StringLength(14, MinimumLength = 14, ErrorMessage = "National ID must be exactly 14 characters.")]
         public string NationalId { get; set; }
 
-        public List<string>? Roles { get; set; }
+        // Add profile photo as a base64 string
+        public IFormFile? ProfilePhoto { get; set; }
 
     }
 }

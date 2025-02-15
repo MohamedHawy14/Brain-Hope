@@ -5,6 +5,7 @@ using BrainHope.Services.DTO.Authentication.SingUp;
 using BrainHope.Services.DTO.Authentication.User;
 using BrainHope.Services.DTO.Email;
 using BrainHope.Services.InterFaces;
+using BrainHope.Services.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -44,33 +45,57 @@ namespace BrainHope_.Api.Controllers
             this._authServices = authServices;
         }
 
+        //[HttpPost("Register")]
+
+        //public async Task<IActionResult> Register([FromBody] RegisterUser registerUser)
+        //{
+        //    var tokenResponse = await _authServices.CreateUserWithTokenAsync(registerUser);
+
+        //    // If user creation failed, return error response
+        //    if (!tokenResponse.IsSuccess)
+        //    {
+        //        return StatusCode(StatusCodes.Status500InternalServerError,
+        //            new Response { Message = tokenResponse.Message, IsSuccess = false });
+        //    }
+
+        //    // Assign roles to user
+        //    await _authServices.AssignRoleToUserAsync(registerUser.Roles, tokenResponse.Response.User);
+
+        //    // Generate email confirmation link
+        //    var confirmationLink = Url.Action(nameof(ConfirmEmail), "Account",
+        //        new { token = tokenResponse.Response.Token, email = registerUser.Email }, Request.Scheme);
+
+        //    var message = new Message(new string[] { registerUser.Email! }, "Confirmation Email Link", confirmationLink!);
+        //    _emailService.SendEmail(message);
+
+        //    return StatusCode(StatusCodes.Status200OK,
+        //        new Response { Status = "Success", Message = $"User Created Successfully & Email Sent To {registerUser.Email} Successfully.", IsSuccess = true });
+        //}
+
         [HttpPost("Register")]
-
-        public async Task<IActionResult> Register([FromBody] RegisterUser registerUser)
+        public async Task<IActionResult> Register([FromForm] RegisterUser registerUser)
         {
-            var tokenResponse = await _authServices.CreateUserWithTokenAsync(registerUser);
-
-            // If user creation failed, return error response
-            if (!tokenResponse.IsSuccess)
+            if (!ModelState.IsValid)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new Response { Message = tokenResponse.Message, IsSuccess = false });
+                return BadRequest(ModelState);
             }
 
-            // Assign roles to user
-            await _authServices.AssignRoleToUserAsync(registerUser.Roles, tokenResponse.Response.User);
+            var response = await _authServices.CreateUserWithTokenAsync(registerUser);
+
+            if (!response.IsSuccess)
+            {
+                return StatusCode(response.StatusCode, response);
+            }
 
             // Generate email confirmation link
             var confirmationLink = Url.Action(nameof(ConfirmEmail), "Account",
-                new { token = tokenResponse.Response.Token, email = registerUser.Email }, Request.Scheme);
+                new { token = response.Response.Token, email = registerUser.Email }, Request.Scheme);
 
             var message = new Message(new string[] { registerUser.Email! }, "Confirmation Email Link", confirmationLink!);
             _emailService.SendEmail(message);
 
-            return StatusCode(StatusCodes.Status200OK,
-                new Response { Status = "Success", Message = $"User Created Successfully & Email Sent To {registerUser.Email} Successfully.", IsSuccess = true });
+            return Ok(response);
         }
-
 
 
         [HttpGet("ConfirmEmail")]

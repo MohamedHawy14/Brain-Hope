@@ -19,6 +19,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Utilites;
 
 namespace BrainHope.Services.Services
 {
@@ -28,6 +29,8 @@ namespace BrainHope.Services.Services
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private new List<string> _allowedextention = new List<string> { ".jpg", ".png" };
+        private long _maxallowImagesize = 3145728;
 
         public AuthServices(UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
@@ -66,52 +69,128 @@ namespace BrainHope.Services.Services
             };
         }
 
+        //public async Task<ApiResponse<CreateUserResponse>> CreateUserWithTokenAsync(RegisterUser registerUser)
+        //{
+        //    //Check Exist User
+        //    var existuser = await _userManager.FindByEmailAsync(registerUser.Email);
+        //    if (existuser != null)
+        //    {
+        //        return new ApiResponse<CreateUserResponse> { IsSuccess = false, StatusCode = 403, Message = "User already exists!" };
+        //    }
+        //    var existUserByUsername = await _userManager.FindByNameAsync(registerUser.UserName);
+        //    if (existUserByUsername != null)
+        //    {
+        //        return new ApiResponse<CreateUserResponse> { IsSuccess = false, StatusCode = 403, Message = "Username is already taken!" };
+
+        //    }
+        //    var existUserByNationalId = await _userManager.Users
+        //        .FirstOrDefaultAsync(u => u.NationalId == registerUser.NationalId);
+
+        //    if (existUserByNationalId != null)
+        //    {
+        //        return new ApiResponse<CreateUserResponse> { IsSuccess = false, StatusCode = 403, Message = "National ID is already registered!" };
+
+        //    }
+
+        //    //Add User To DB
+        //    ApplicationUser user = new()
+        //    {
+        //        Email = registerUser.Email,
+        //        UserName = registerUser.UserName,
+        //        NationalId = registerUser.NationalId,
+        //        SecurityStamp = Guid.NewGuid().ToString(),
+        //        TwoFactorEnabled = true
+
+        //    };
+        //    var result = await _userManager.CreateAsync(user, registerUser.Password);
+        //    if (result.Succeeded)
+        //    {
+        //        var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+        //        return new ApiResponse<CreateUserResponse> { Response = new CreateUserResponse() { User = user, Token = token }, IsSuccess = true, StatusCode = 201, Message = "User Created Successfully ." };
+
+        //    }
+        //    else
+        //    {
+        //        return new ApiResponse<CreateUserResponse> { IsSuccess = false, StatusCode = 500, Message = "User Failed to Create" };
+
+        //    }
+
+        //}
+
+
         public async Task<ApiResponse<CreateUserResponse>> CreateUserWithTokenAsync(RegisterUser registerUser)
         {
-            //Check Exist User
-            var existuser = await _userManager.FindByEmailAsync(registerUser.Email);
-            if (existuser != null)
+            // Check if the user already exists
+            var existUser = await _userManager.FindByEmailAsync(registerUser.Email);
+            if (existUser != null)
             {
                 return new ApiResponse<CreateUserResponse> { IsSuccess = false, StatusCode = 403, Message = "User already exists!" };
             }
+
             var existUserByUsername = await _userManager.FindByNameAsync(registerUser.UserName);
             if (existUserByUsername != null)
             {
                 return new ApiResponse<CreateUserResponse> { IsSuccess = false, StatusCode = 403, Message = "Username is already taken!" };
-          
             }
+
             var existUserByNationalId = await _userManager.Users
                 .FirstOrDefaultAsync(u => u.NationalId == registerUser.NationalId);
 
             if (existUserByNationalId != null)
             {
                 return new ApiResponse<CreateUserResponse> { IsSuccess = false, StatusCode = 403, Message = "National ID is already registered!" };
-
             }
 
-            //Add User To DB
+            if (!_allowedextention.Contains(Path.GetExtension(registerUser.ProfilePhoto.FileName).ToLower()))
+                return new ApiResponse<CreateUserResponse> { IsSuccess = false, StatusCode = 500, Message = "Only .jpg & .png" };
+            if (registerUser.ProfilePhoto.Length > _maxallowImagesize)
+                return new ApiResponse<CreateUserResponse> { IsSuccess = false, StatusCode = 500, Message = "Max Allowed Size Is 3Mb" };
+
+
+
+
+
+            using var datastream = new MemoryStream();
+            await registerUser.ProfilePhoto.CopyToAsync(datastream);
+
+            // Create new user object
             ApplicationUser user = new()
             {
                 Email = registerUser.Email,
                 UserName = registerUser.UserName,
                 NationalId = registerUser.NationalId,
                 SecurityStamp = Guid.NewGuid().ToString(),
-                TwoFactorEnabled = true
-
+                TwoFactorEnabled = true,
+                ProfilePhoto = datastream.ToArray()  // Save profile photo to database
             };
+
             var result = await _userManager.CreateAsync(user, registerUser.Password);
-            if (result.Succeeded)
+            if (!result.Succeeded)
             {
-                var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                return new ApiResponse<CreateUserResponse> { Response = new CreateUserResponse() { User = user, Token = token }, IsSuccess = true, StatusCode = 201, Message = "User Created Successfully ." };
-
-            }
-            else
-            {
-                return new ApiResponse<CreateUserResponse> { IsSuccess = false, StatusCode = 500, Message = "User Failed to Create" };
-
+                return new ApiResponse<CreateUserResponse> { IsSuccess = false, StatusCode = 500, Message = "User failed to create." };
             }
 
+            // Automatically assign "Patient" role
+            if (!await _roleManager.RoleExistsAsync(SD.Role_Patient))
+            {
+                await _roleManager.CreateAsync(new IdentityRole(SD.Role_Patient));
+            }
+            await _userManager.AddToRoleAsync(user, SD.Role_Patient);
+
+            // Generate email confirmation token
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+            return new ApiResponse<CreateUserResponse>
+            {
+                Response = new CreateUserResponse
+                {
+                    User = user,
+                    Token = token
+                },
+                IsSuccess = true,
+                StatusCode = 201,
+                Message = "User created successfully. Please confirm your email."
+            };
         }
 
         public async Task<ApiResponse<LoginResponse>> GetJwtTokenAsync(ApplicationUser user)
