@@ -1,6 +1,8 @@
 
 using BrainHope.DataAcess.Contexts;
 using BrainHope.DataAcess.Models;
+using BrainHope.DataAcess.Repositry.IRepository;
+using BrainHope.DataAcess.Repositry;
 using BrainHope.Services.DTO.Email;
 using BrainHope.Services.InterFaces;
 using BrainHope.Services.Services;
@@ -25,10 +27,14 @@ namespace BrainHope_.Api
             //For Identity
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<BrainHopeDbContext>().AddDefaultTokenProviders();
 
+            //Repository & UnitOfWork
+            builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-            //Add Authentication
+
 
             #region JWT
+            //Add Authentication
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BrainHope.Services.DTO.Authentication.User
+namespace BrainHope.DataAcess.Models
 {
-    public class RefreshToken
+    public class ModelBase
     {
-
+        public  int Id { get; set; }
     }
 }

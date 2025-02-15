@@ -14,7 +14,6 @@
 
   <ItemGroup>
     <Folder Include="Migrations\" />
-    <Folder Include="Repositry\" />
   </ItemGroup>
 
   <ItemGroup>

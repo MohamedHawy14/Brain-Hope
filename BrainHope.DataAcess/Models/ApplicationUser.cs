@@ -18,5 +18,12 @@ namespace BrainHope.DataAcess.Models
 
         public string? RefreshToken { get; set; }
         public DateTime? RefreshTokenExpiry { get; set; }
+
+        // Profile Photo stored as byte array
+        public byte[]? ProfilePhoto { get; set; }
+
+        // Relation with Users
+        public virtual Doctor? Doctor { get; set; }
+        public virtual Patient? Patient { get; set; }
     }
 }
