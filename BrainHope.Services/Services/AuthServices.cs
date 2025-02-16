@@ -1,5 +1,7 @@
-﻿using BrainHope.DataAcess.Models;
+﻿using BrainHope.DataAcess.Contexts;
+using BrainHope.DataAcess.Models;
 using BrainHope.Services.DTO;
+using BrainHope.Services.DTO.Admin;
 using BrainHope.Services.DTO.Authentication.SignIn;
 using BrainHope.Services.DTO.Authentication.SingUp;
 using BrainHope.Services.DTO.Authentication.User;
@@ -29,6 +31,7 @@ namespace BrainHope.Services.Services
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly BrainHopeDbContext _context;
         private new List<string> _allowedextention = new List<string> { ".jpg", ".png" };
         private long _maxallowImagesize = 3145728;
 
@@ -36,12 +39,14 @@ namespace BrainHope.Services.Services
             RoleManager<IdentityRole> roleManager,
             IEmailService emailService,
             IConfiguration configuration,
-            SignInManager<ApplicationUser> signInManager)
+            SignInManager<ApplicationUser> signInManager,
+            BrainHopeDbContext context)
         {
             this._userManager = userManager;
             this._roleManager = roleManager;
             this._configuration = configuration;
             this._signInManager = signInManager;
+            this._context = context;
         }
 
         public async Task<ApiResponse<List<string>>> AssignRoleToUserAsync(List<string> roles, ApplicationUser user)
@@ -69,53 +74,104 @@ namespace BrainHope.Services.Services
             };
         }
 
-        //public async Task<ApiResponse<CreateUserResponse>> CreateUserWithTokenAsync(RegisterUser registerUser)
-        //{
-        //    //Check Exist User
-        //    var existuser = await _userManager.FindByEmailAsync(registerUser.Email);
-        //    if (existuser != null)
-        //    {
-        //        return new ApiResponse<CreateUserResponse> { IsSuccess = false, StatusCode = 403, Message = "User already exists!" };
-        //    }
-        //    var existUserByUsername = await _userManager.FindByNameAsync(registerUser.UserName);
-        //    if (existUserByUsername != null)
-        //    {
-        //        return new ApiResponse<CreateUserResponse> { IsSuccess = false, StatusCode = 403, Message = "Username is already taken!" };
+        public async Task<ApiResponse<CreateUserResponse>> CreateUserWithTokenAdminAsync(CreateUser createUser)
+        {
+            var response = new ApiResponse<CreateUserResponse>();
 
-        //    }
-        //    var existUserByNationalId = await _userManager.Users
-        //        .FirstOrDefaultAsync(u => u.NationalId == registerUser.NationalId);
+            // Check if the user already exists
+            var existingUser = await _userManager.FindByEmailAsync(createUser.Email);
+            if (existingUser != null)
+            {
+                response.IsSuccess = false;
+                response.Message = "User with this email already exists.";
+                return response;
+            }
+            var existingUser2 = await _userManager.FindByNameAsync(createUser.UserName);
+            if (existingUser2 != null)
+            {
+                response.IsSuccess = false;
+                response.Message = "User with this UserName already exists.";
+                return response;
+            }
+            var existUserByNationalId = await _userManager.Users
+                .FirstOrDefaultAsync(u => u.NationalId == createUser.NationalId);
+            if (existUserByNationalId != null)
+            {
+                response.IsSuccess = false;
+                response.Message = "User with this National Id already exists.";
+                return response;
+            }
 
-        //    if (existUserByNationalId != null)
-        //    {
-        //        return new ApiResponse<CreateUserResponse> { IsSuccess = false, StatusCode = 403, Message = "National ID is already registered!" };
+            if (!_allowedextention.Contains(Path.GetExtension(createUser.ProfilePhoto.FileName).ToLower()))
+                return new ApiResponse<CreateUserResponse> { IsSuccess = false, StatusCode = 500, Message = "Only .jpg & .png" };
+            if (createUser.ProfilePhoto.Length > _maxallowImagesize)
+                return new ApiResponse<CreateUserResponse> { IsSuccess = false, StatusCode = 500, Message = "Max Allowed Size Is 3Mb" };
 
-        //    }
 
-        //    //Add User To DB
-        //    ApplicationUser user = new()
-        //    {
-        //        Email = registerUser.Email,
-        //        UserName = registerUser.UserName,
-        //        NationalId = registerUser.NationalId,
-        //        SecurityStamp = Guid.NewGuid().ToString(),
-        //        TwoFactorEnabled = true
 
-        //    };
-        //    var result = await _userManager.CreateAsync(user, registerUser.Password);
-        //    if (result.Succeeded)
-        //    {
-        //        var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-        //        return new ApiResponse<CreateUserResponse> { Response = new CreateUserResponse() { User = user, Token = token }, IsSuccess = true, StatusCode = 201, Message = "User Created Successfully ." };
 
-        //    }
-        //    else
-        //    {
-        //        return new ApiResponse<CreateUserResponse> { IsSuccess = false, StatusCode = 500, Message = "User Failed to Create" };
 
-        //    }
+            using var datastream = new MemoryStream();
+            await createUser.ProfilePhoto.CopyToAsync(datastream);
 
-        //}
+            // Create a new ApplicationUser object
+            var user = new ApplicationUser
+            {
+                UserName = createUser.UserName,
+                Email = createUser.Email,
+                NationalId = createUser.NationalId  ,
+                SecurityStamp = Guid.NewGuid().ToString(),
+                TwoFactorEnabled = true,
+                ProfilePhoto = datastream.ToArray()  // Save profile photo to database
+            };
+
+            // Create user in Identity
+            var result = await _userManager.CreateAsync(user, createUser.Password);
+            if (!result.Succeeded)
+            {
+                response.IsSuccess = false;
+                response.Message = "Failed to create user: " + string.Join(", ", result.Errors.Select(e => e.Description));
+                return response;
+            }
+
+
+
+            // Assign roles to the user
+            await AssignRoleToUserAsync(createUser.Roles, user);
+
+            // Handle role-specific logic
+            if (createUser.Roles.Contains(SD.Role_Doctor))
+            {
+                var doctor = new Doctor
+                {
+                    UserId = user.Id
+                };
+                _context.Doctors.Add(doctor);
+            }
+            else if (createUser.Roles.Contains(SD.Role_Patient))
+            {
+                var patient = new Patient
+                {
+                    UserId = user.Id
+                };
+                _context.Patients.Add(patient);
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Generate a token for the user
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+            response.IsSuccess = true;
+            response.Message = "User created successfully.";
+            response.Response = new CreateUserResponse
+            {
+                User = user,
+                Token = token
+            };
+
+            return response;
+        }
 
 
         public async Task<ApiResponse<CreateUserResponse>> CreateUserWithTokenAsync(RegisterUser registerUser)
@@ -176,6 +232,16 @@ namespace BrainHope.Services.Services
                 await _roleManager.CreateAsync(new IdentityRole(SD.Role_Patient));
             }
             await _userManager.AddToRoleAsync(user, SD.Role_Patient);
+
+            // Insert new record in Patient table
+            var patient = new Patient
+            {
+                UserId = user.Id,
+                AppUser = user
+            };
+
+            _context.Patients.Add(patient); // Save to Patient table
+            await _context.SaveChangesAsync();
 
             // Generate email confirmation token
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
