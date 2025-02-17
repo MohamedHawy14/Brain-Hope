@@ -14,5 +14,7 @@ namespace BrainHope.DataAcess.Models
 
         // Many-to-Many Relationship with Doctors
         public virtual ICollection<DoctorPatient> DoctorPatients { get; set; } = new List<DoctorPatient>();
+        public virtual ICollection<Appointment> Appointments { get; set; } = new HashSet<Appointment>();
+
     }
 }

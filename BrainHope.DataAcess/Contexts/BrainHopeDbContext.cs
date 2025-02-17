@@ -18,6 +18,7 @@ namespace BrainHope.DataAcess.Contexts
         public DbSet<Patient> Patients { get; set; }
         public DbSet<DoctorPatient> DoctorPatients { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
+        public DbSet<Appointment> Appointments { get; set; }
         public BrainHopeDbContext(DbContextOptions<BrainHopeDbContext> options):base(options)
         {
             
@@ -54,6 +55,18 @@ namespace BrainHope.DataAcess.Contexts
                 .HasOne(dp => dp.Patient)
                 .WithMany(p => p.DoctorPatients)
                 .HasForeignKey(dp => dp.PatientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+           builder.Entity<Appointment>()
+               .HasOne(a => a.Doctor)
+               .WithMany(d => d.Appointments) 
+               .HasForeignKey(a => a.DoctorId)
+               .OnDelete(DeleteBehavior.Cascade); 
+
+            builder.Entity<Appointment>()
+                .HasOne(a => a.Patient)
+                .WithMany(p => p.Appointments) 
+                .HasForeignKey(a => a.PatientId)
                 .OnDelete(DeleteBehavior.Cascade);
 
 

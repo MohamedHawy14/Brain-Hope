@@ -69,6 +69,25 @@ namespace BrainHope_.Api.Controllers
             return Ok(doctorDto);
         }
 
+        [HttpGet("GetDoctorCalendlyLink/{doctorId}")]
+        public async Task<IActionResult> GetDoctorCalendlyLink(int doctorId)
+        {
+            var doctor = unitOfWork.Repository<Doctor>().Get(d => d.Id == doctorId);
+
+            if (doctor == null)
+            {
+                return NotFound("Doctor not found.");
+            }
+
+            if (string.IsNullOrEmpty(doctor.CalendlyLink))
+            {
+                return BadRequest("This doctor has not set up a Calendly link.");
+            }
+
+            return Ok(new { calendlyLink = doctor.CalendlyLink });
+        }
+
+
 
     }
 }
