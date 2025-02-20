@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using BrainHope.Services.Hubs;
 
 namespace BrainHope_.Api
 {
@@ -30,6 +31,10 @@ namespace BrainHope_.Api
             //Repository & UnitOfWork
             builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+            builder.Services.AddScoped<IChatRepository, ChatRepository>();
+
+            //signalr
+            builder.Services.AddSignalR();
 
 
 
@@ -125,8 +130,9 @@ namespace BrainHope_.Api
             }
 
             app.UseHttpsRedirection();
-
+            app.UseAuthentication();
             app.UseAuthorization();
+            app.MapHub<ChatHub>("/chathub");
 
 
             app.MapControllers();

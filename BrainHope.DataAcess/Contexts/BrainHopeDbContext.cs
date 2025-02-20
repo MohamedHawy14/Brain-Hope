@@ -1,4 +1,5 @@
 ﻿using BrainHope.DataAcess.Models;
+using BrainHope.DataAcess.Models.Chat;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +20,9 @@ namespace BrainHope.DataAcess.Contexts
         public DbSet<DoctorPatient> DoctorPatients { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
         public DbSet<Appointment> Appointments { get; set; }
+
+        public DbSet<UserConnection> UserConnections { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
         public BrainHopeDbContext(DbContextOptions<BrainHopeDbContext> options):base(options)
         {
             
@@ -68,6 +72,25 @@ namespace BrainHope.DataAcess.Contexts
                 .WithMany(p => p.Appointments) 
                 .HasForeignKey(a => a.PatientId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            //chat 
+            builder.Entity<UserConnection>()
+           .HasOne(uc => uc.User)
+           .WithMany(u => u.UserConnections)
+           .HasForeignKey(uc => uc.UserId)
+           .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<ChatMessage>()
+               .HasOne(m => m.Sender)
+               .WithMany()
+               .HasForeignKey(m => m.SenderId)
+               .OnDelete(DeleteBehavior.Restrict); // Prevent cascading delete
+
+            builder.Entity<ChatMessage>()
+                .HasOne(m => m.Receiver)
+                .WithMany()
+                .HasForeignKey(m => m.ReceiverId)
+                .OnDelete(DeleteBehavior.Restrict); // Prevent cascading delete
 
 
             SeedRoles(builder);

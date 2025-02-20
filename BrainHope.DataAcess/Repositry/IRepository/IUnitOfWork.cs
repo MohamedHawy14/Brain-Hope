@@ -11,6 +11,8 @@ namespace BrainHope.DataAcess.Repositry.IRepository
     {
         Repository<T> Repository<T>() where T : ModelBase;
 
-        int Complete();
+        Task <int>  Complete();
+
+        IChatRepository ChatRepository { get; }
     }
 }

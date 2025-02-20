@@ -1,6 +1,7 @@
 ﻿using BrainHope.DataAcess.Contexts;
 using BrainHope.DataAcess.Models;
 using BrainHope.DataAcess.Repositry.IRepository;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -12,13 +13,15 @@ namespace BrainHope.DataAcess.Repositry
 {
     public class UnitOfWork : IUnitOfWork
     {
-        private readonly BrainHopeDbContext dbcontext;
+        private readonly BrainHopeDbContext _dbcontext;
+        public IChatRepository ChatRepository { get; private set; }
 
         private Hashtable _repsitories;
         public UnitOfWork(BrainHopeDbContext dbcontext)
         {
-            this.dbcontext = dbcontext;
+            this._dbcontext = dbcontext;
             _repsitories = new Hashtable();
+            ChatRepository = new ChatRepository(_dbcontext);
 
 
         }
@@ -27,24 +30,24 @@ namespace BrainHope.DataAcess.Repositry
             var Key = typeof(T).Name;
             if (!_repsitories.ContainsKey(Key))
             {
-                var repo = new Repository<T>(dbcontext);
+                var repo = new Repository<T>(_dbcontext);
                 _repsitories.Add(Key, repo);
             }
             return _repsitories[Key] as Repository<T>;
         }
 
 
-        public int Complete()
-        {
-            return dbcontext.SaveChanges();
 
+        public async Task<int> Complete()
+        {
+            return await _dbcontext.SaveChangesAsync();
         }
 
         public void Dispose()
         {
-            dbcontext.Dispose();
+            _dbcontext.Dispose();
         }
 
-
+       
     }
 }

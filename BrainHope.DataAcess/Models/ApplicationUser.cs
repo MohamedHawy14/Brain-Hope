@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using BrainHope.DataAcess.Models.Chat;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -25,5 +26,8 @@ namespace BrainHope.DataAcess.Models
         // Relation with Users
         public virtual Doctor? Doctor { get; set; }
         public virtual Patient? Patient { get; set; }
+
+        //chat
+        public ICollection<UserConnection> UserConnections { get; set; }
     }
 }
