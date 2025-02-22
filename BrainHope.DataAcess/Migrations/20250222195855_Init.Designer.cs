@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BrainHope.DataAcess.Migrations
 {
     [DbContext(typeof(BrainHopeDbContext))]
-    [Migration("20250209190846_AddRefreshTokenToApplicationUser")]
-    partial class AddRefreshTokenToApplicationUser
+    [Migration("20250222195855_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -75,6 +75,9 @@ namespace BrainHope.DataAcess.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<byte[]>("ProfilePhoto")
+                        .HasColumnType("varbinary(max)");
+
                     b.Property<string>("RefreshToken")
                         .HasColumnType("nvarchar(max)");
 
@@ -102,6 +105,167 @@ namespace BrainHope.DataAcess.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("BrainHope.DataAcess.Models.Appointment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AppointmentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DoctorId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("EndTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PatientId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DoctorId");
+
+                    b.HasIndex("PatientId");
+
+                    b.ToTable("Appointments");
+                });
+
+            modelBuilder.Entity("BrainHope.DataAcess.Models.Chat.ChatMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Read")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ReceiverId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("SenderId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("Time")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReceiverId");
+
+                    b.HasIndex("SenderId");
+
+                    b.ToTable("ChatMessages");
+                });
+
+            modelBuilder.Entity("BrainHope.DataAcess.Models.Chat.UserConnection", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ConnectionId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserConnections");
+                });
+
+            modelBuilder.Entity("BrainHope.DataAcess.Models.Doctor", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CalendlyLink")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GratuedFrom")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Rate")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasFilter("[UserId] IS NOT NULL");
+
+                    b.ToTable("Doctors");
+                });
+
+            modelBuilder.Entity("BrainHope.DataAcess.Models.DoctorPatient", b =>
+                {
+                    b.Property<int>("DoctorId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PatientId")
+                        .HasColumnType("int");
+
+                    b.HasKey("DoctorId", "PatientId");
+
+                    b.HasIndex("PatientId");
+
+                    b.ToTable("DoctorPatients");
+                });
+
+            modelBuilder.Entity("BrainHope.DataAcess.Models.Patient", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasFilter("[UserId] IS NOT NULL");
+
+                    b.ToTable("Patients");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -133,21 +297,21 @@ namespace BrainHope.DataAcess.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "9ddeddff-cb7e-487f-923c-5d0a7b58532e",
+                            Id = "94879194-0e99-4492-b460-09e4d7143544",
                             ConcurrencyStamp = "1",
                             Name = "Admin",
                             NormalizedName = "Admin"
                         },
                         new
                         {
-                            Id = "0bf92d39-52a6-4135-bded-b30413a75143",
+                            Id = "73e6c002-41d7-471b-a57c-381f0d2d617d",
                             ConcurrencyStamp = "2",
                             Name = "Patient",
                             NormalizedName = "Patient"
                         },
                         new
                         {
-                            Id = "950aac38-e2c6-47ce-b3fb-d7f375f75f81",
+                            Id = "a1884f1d-3eaf-46b8-b71b-26878bbb0283",
                             ConcurrencyStamp = "3",
                             Name = "Doctor",
                             NormalizedName = "Doctor"
@@ -260,6 +424,94 @@ namespace BrainHope.DataAcess.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("BrainHope.DataAcess.Models.Appointment", b =>
+                {
+                    b.HasOne("BrainHope.DataAcess.Models.Doctor", "Doctor")
+                        .WithMany("Appointments")
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BrainHope.DataAcess.Models.Patient", "Patient")
+                        .WithMany("Appointments")
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Doctor");
+
+                    b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("BrainHope.DataAcess.Models.Chat.ChatMessage", b =>
+                {
+                    b.HasOne("BrainHope.DataAcess.Models.ApplicationUser", "Receiver")
+                        .WithMany()
+                        .HasForeignKey("ReceiverId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BrainHope.DataAcess.Models.ApplicationUser", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Receiver");
+
+                    b.Navigation("Sender");
+                });
+
+            modelBuilder.Entity("BrainHope.DataAcess.Models.Chat.UserConnection", b =>
+                {
+                    b.HasOne("BrainHope.DataAcess.Models.ApplicationUser", "User")
+                        .WithMany("UserConnections")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BrainHope.DataAcess.Models.Doctor", b =>
+                {
+                    b.HasOne("BrainHope.DataAcess.Models.ApplicationUser", "AppUser")
+                        .WithOne("Doctor")
+                        .HasForeignKey("BrainHope.DataAcess.Models.Doctor", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("AppUser");
+                });
+
+            modelBuilder.Entity("BrainHope.DataAcess.Models.DoctorPatient", b =>
+                {
+                    b.HasOne("BrainHope.DataAcess.Models.Doctor", "Doctor")
+                        .WithMany("DoctorPatients")
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BrainHope.DataAcess.Models.Patient", "Patient")
+                        .WithMany("DoctorPatients")
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Doctor");
+
+                    b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("BrainHope.DataAcess.Models.Patient", b =>
+                {
+                    b.HasOne("BrainHope.DataAcess.Models.ApplicationUser", "AppUser")
+                        .WithOne("Patient")
+                        .HasForeignKey("BrainHope.DataAcess.Models.Patient", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("AppUser");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -309,6 +561,29 @@ namespace BrainHope.DataAcess.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("BrainHope.DataAcess.Models.ApplicationUser", b =>
+                {
+                    b.Navigation("Doctor");
+
+                    b.Navigation("Patient");
+
+                    b.Navigation("UserConnections");
+                });
+
+            modelBuilder.Entity("BrainHope.DataAcess.Models.Doctor", b =>
+                {
+                    b.Navigation("Appointments");
+
+                    b.Navigation("DoctorPatients");
+                });
+
+            modelBuilder.Entity("BrainHope.DataAcess.Models.Patient", b =>
+                {
+                    b.Navigation("Appointments");
+
+                    b.Navigation("DoctorPatients");
                 });
 #pragma warning restore 612, 618
         }

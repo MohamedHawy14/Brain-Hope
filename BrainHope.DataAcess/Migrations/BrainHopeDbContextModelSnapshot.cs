@@ -294,21 +294,21 @@ namespace BrainHope.DataAcess.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "3c4fdab9-71ea-41a1-b817-e11409885f77",
+                            Id = "94879194-0e99-4492-b460-09e4d7143544",
                             ConcurrencyStamp = "1",
                             Name = "Admin",
                             NormalizedName = "Admin"
                         },
                         new
                         {
-                            Id = "a783e12f-e35f-4895-8919-3890d7e8ecca",
+                            Id = "73e6c002-41d7-471b-a57c-381f0d2d617d",
                             ConcurrencyStamp = "2",
                             Name = "Patient",
                             NormalizedName = "Patient"
                         },
                         new
                         {
-                            Id = "c2d8ef10-04cd-447e-bd74-ba0ca211d697",
+                            Id = "a1884f1d-3eaf-46b8-b71b-26878bbb0283",
                             ConcurrencyStamp = "3",
                             Name = "Doctor",
                             NormalizedName = "Doctor"
