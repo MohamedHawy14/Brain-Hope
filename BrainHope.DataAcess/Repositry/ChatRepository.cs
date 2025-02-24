@@ -22,8 +22,8 @@ namespace BrainHope.DataAcess.Repositry
         public async Task<IEnumerable<ChatMessage>> GetChatHistory(string user1, string user2)
         {
             return await _context.ChatMessages
-                .Where(m => (m.SenderId == user1 && m.ReceiverId == user2) || (m.SenderId == user2 && m.ReceiverId == user1))
-                .Where(m => !m.Deleted) // Exclude soft-deleted messages
+                .Where(m => ((m.SenderId == user1 && m.ReceiverId == user2) ||
+                             (m.SenderId == user2 && m.ReceiverId == user1)) && !m.Deleted)
                 .OrderBy(m => m.Time)
                 .ToListAsync();
         }
@@ -41,7 +41,10 @@ namespace BrainHope.DataAcess.Repositry
                 .Where(m => m.SenderId == senderId && m.ReceiverId == receiverId && !m.Read)
                 .ToListAsync();
 
-            messages.ForEach(m => m.Read = true);
+            foreach (var msg in messages)
+            {
+                msg.Read = true;
+            }
             await _context.SaveChangesAsync();
         }
 
@@ -57,7 +60,7 @@ namespace BrainHope.DataAcess.Repositry
 
         public async Task AddUserConnection(UserConnection connection)
         {
-            _context.UserConnections.Add(connection);
+            await _context.UserConnections.AddAsync(connection);
             await _context.SaveChangesAsync();
         }
 
@@ -77,6 +80,13 @@ namespace BrainHope.DataAcess.Repositry
                 .Where(c => c.UserId == userId)
                 .Select(c => c.ConnectionId)
                 .FirstOrDefaultAsync();
+        }
+
+        public async Task<IEnumerable<ChatMessage>> GetAllMessagesForUser(string userId)
+        {
+            return await _context.ChatMessages
+                .Where(m => (m.SenderId == userId || m.ReceiverId == userId) && !m.Deleted)
+                .ToListAsync();
         }
     }
 }

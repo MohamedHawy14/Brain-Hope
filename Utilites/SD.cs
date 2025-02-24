@@ -11,7 +11,10 @@ namespace Utilites
         public const string Role_Admin = "Admin";
         public const string Role_Patient = "Patient";
         public const string Role_Doctor = "Doctor";
-        
-      
+
+        public const string Message_Text = "text";
+        public const string Message_Image = "image";
+
+
     }
 }

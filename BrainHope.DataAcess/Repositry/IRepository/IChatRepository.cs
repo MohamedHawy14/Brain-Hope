@@ -16,5 +16,7 @@ namespace BrainHope.DataAcess.Repositry.IRepository
         Task AddUserConnection(UserConnection connection);
         Task RemoveUserConnection(string connectionId);
         Task<string?> GetUserConnectionId(string userId);
+
+        Task<IEnumerable<ChatMessage>> GetAllMessagesForUser(string userId);
     }
 }

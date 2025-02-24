@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Utilites;
 
 namespace BrainHope.DataAcess.Models.Chat
 {
@@ -19,23 +20,30 @@ namespace BrainHope.DataAcess.Models.Chat
 
         [ForeignKey("SenderId")]
         [JsonIgnore]
-        public ApplicationUser Sender { get; set; } // Navigation Property
+        public ApplicationUser Sender { get; set; } 
 
         [Required]
         public string ReceiverId { get; set; } // FK from AspNetUsers
 
         [ForeignKey("ReceiverId")]
         [JsonIgnore]
-        public ApplicationUser Receiver { get; set; } // Navigation Property
+        public ApplicationUser Receiver { get; set; } 
 
-        [Required]
-        public string Message { get; set; }
+       
+        public string? Message { get; set; }
 
         [Required]
         public DateTime Time { get; set; } = DateTime.UtcNow;
 
-        public bool Read { get; set; } = false; // False: Single Check, True: Blue Double Check
+        public bool Read { get; set; } = false; 
 
         public bool Deleted { get; set; } = false; // Soft Delete
+
+    
+        // "text" or "image"
+        public string MessageType { get; set; } = SD.Message_Text;
+
+        // When MessageType is "image", this holds the binary data
+        public byte[]? Image { get; set; }
     }
 }

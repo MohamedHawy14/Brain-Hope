@@ -4,6 +4,7 @@ using BrainHope.DataAcess.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BrainHope.DataAcess.Migrations
 {
     [DbContext(typeof(BrainHopeDbContext))]
-    partial class BrainHopeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250224152711_AddImageToChatMessage")]
+    partial class AddImageToChatMessage
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -152,6 +155,7 @@ namespace BrainHope.DataAcess.Migrations
                         .HasColumnType("varbinary(max)");
 
                     b.Property<string>("Message")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("MessageType")
@@ -300,21 +304,21 @@ namespace BrainHope.DataAcess.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "e7d36ed8-371d-4b2e-b42b-906344d3fb72",
+                            Id = "208d5619-0a8b-4621-b4b5-8bd1acd77348",
                             ConcurrencyStamp = "1",
                             Name = "Admin",
                             NormalizedName = "Admin"
                         },
                         new
                         {
-                            Id = "6871f3d8-8f51-4920-a239-2fdefcc8a264",
+                            Id = "d59ed126-5519-42bd-b350-50194f197ca4",
                             ConcurrencyStamp = "2",
                             Name = "Patient",
                             NormalizedName = "Patient"
                         },
                         new
                         {
-                            Id = "a0de2d43-ec20-4f4b-a143-96ea7011dd1c",
+                            Id = "42d82c20-c449-49a8-8238-066c7f653e98",
                             ConcurrencyStamp = "3",
                             Name = "Doctor",
                             NormalizedName = "Doctor"
