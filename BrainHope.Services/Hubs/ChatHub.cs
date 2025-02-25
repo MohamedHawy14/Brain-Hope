@@ -45,7 +45,7 @@ namespace BrainHope.Services.Hubs
                 SenderId = senderId,
                 ReceiverId = receiverId,
                 Message = message,
-                MessageType = SD.Message_Text
+                //MessageType = SD.Message_Text
                
             };
 
@@ -62,7 +62,7 @@ namespace BrainHope.Services.Hubs
                     SenderId = chatMessage.SenderId,
                     ReceiverId = chatMessage.ReceiverId,
                     Message = chatMessage.Message,
-                   MessageType=SD.Message_Text
+                   //MessageType=SD.Message_Text
                 };
                 await Clients.Client(connectionId).SendAsync("ReceiveMessage", dto);
             }

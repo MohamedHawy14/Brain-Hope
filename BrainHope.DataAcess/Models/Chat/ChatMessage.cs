@@ -40,8 +40,8 @@ namespace BrainHope.DataAcess.Models.Chat
         public bool Deleted { get; set; } = false; // Soft Delete
 
     
-        // "text" or "image"
-        public string MessageType { get; set; } = SD.Message_Text;
+        //// "text" or "image"
+        //public string MessageType { get; set; } = SD.Message_Text;
 
         // When MessageType is "image", this holds the binary data
         public byte[]? Image { get; set; }

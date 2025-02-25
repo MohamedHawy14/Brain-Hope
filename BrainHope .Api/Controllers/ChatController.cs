@@ -38,7 +38,7 @@ namespace BrainHope_.Api.Controllers
                 SenderId = messageDto.SenderId,
                 ReceiverId = messageDto.ReceiverId,
                 Message = messageDto.Message,
-                MessageType = SD.Message_Text 
+                //MessageType = SD.Message_Text 
                 
             };
 
@@ -62,7 +62,7 @@ namespace BrainHope_.Api.Controllers
                 await messageDto.image.CopyToAsync(dataStream);
                 chatMessage.Image = dataStream.ToArray();
 
-                chatMessage.MessageType = SD.Message_Image;
+                //chatMessage.MessageType = SD.Message_Image;
             }
 
           
@@ -75,7 +75,7 @@ namespace BrainHope_.Api.Controllers
                 senderId = savedMessage.SenderId,
                 receiverId = savedMessage.ReceiverId,
                 message = savedMessage.Message,
-                messageType = savedMessage.MessageType,
+                //messageType = savedMessage.MessageType,
                 image=savedMessage.Image
             };
 
@@ -92,7 +92,7 @@ namespace BrainHope_.Api.Controllers
                 receiverId = m.ReceiverId,
                 message = m.Message,
                 time = m.Time,
-                messageType = m.MessageType,
+                //messageType = m.MessageType,
                 image = m.Image,
                 //read = m.Read,
                 //deleted = m.Deleted
