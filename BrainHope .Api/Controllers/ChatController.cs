@@ -38,11 +38,11 @@ namespace BrainHope_.Api.Controllers
                 SenderId = messageDto.SenderId,
                 ReceiverId = messageDto.ReceiverId,
                 Message = messageDto.Message,
-                //MessageType = SD.Message_Text 
+            
                 
             };
 
-            // If a file is provided, validate and convert it to byte[]
+            
             if (messageDto.image != null)
             {
                 // Validate file extension.
@@ -62,7 +62,7 @@ namespace BrainHope_.Api.Controllers
                 await messageDto.image.CopyToAsync(dataStream);
                 chatMessage.Image = dataStream.ToArray();
 
-                //chatMessage.MessageType = SD.Message_Image;
+              
             }
 
           
@@ -75,7 +75,6 @@ namespace BrainHope_.Api.Controllers
                 senderId = savedMessage.SenderId,
                 receiverId = savedMessage.ReceiverId,
                 message = savedMessage.Message,
-                //messageType = savedMessage.MessageType,
                 image=savedMessage.Image
             };
 
@@ -92,10 +91,9 @@ namespace BrainHope_.Api.Controllers
                 receiverId = m.ReceiverId,
                 message = m.Message,
                 time = m.Time,
-                //messageType = m.MessageType,
+                
                 image = m.Image,
-                //read = m.Read,
-                //deleted = m.Deleted
+               
             });
             return Ok(dtoList);
         }
@@ -129,6 +127,12 @@ namespace BrainHope_.Api.Controllers
             // Use UserManager to fetch user details from AspNetUsers
             var users = await _userManager.Users
                 .Where(u => contactIds.Contains(u.Id))
+                .Select(u => new
+                {
+                    u.Id,
+                    u.UserName,
+                    u.ProfilePhoto // Include the profile photo
+                })
                 .ToListAsync();
 
             var contacts = contactGroups.Select(g =>
@@ -141,13 +145,13 @@ namespace BrainHope_.Api.Controllers
                     ContactId = g.Key,
                     LastMessage = lastMessage.Message,
                     LastMessageTime = lastMessage.Time,
-                    ContactUserName = contactUser?.UserName ?? g.Key
+                    ContactUserName = contactUser?.UserName ?? g.Key,
+                    ProfilePhoto = contactUser?.ProfilePhoto // Add the profile photo
                 };
             }).ToList();
 
             return Ok(contacts);
         }
-    
 
-}
+    }
 }
