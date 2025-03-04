@@ -33,7 +33,7 @@ namespace BrainHope_.Api.Controllers
                 .Select(d => new AllDoctorDTO
                 {
                     Name = d.AppUser.UserName,
-                    Description = d.Description,
+                    Description = d.AppUser.Description,
                     Rate = d.Rate,
                     ProfilePhoto = d.AppUser.ProfilePhoto // Keep as byte[]
                 })
@@ -61,7 +61,7 @@ namespace BrainHope_.Api.Controllers
             var doctorDto = new DoctorByNIdDTO
             {
                 Name = doctor.AppUser.UserName,
-                Description = doctor.Description,
+                Description = doctor.AppUser.Description,
                 Address = doctor.AppUser.Address,
                 ProfilePhoto = doctor.AppUser.ProfilePhoto 
             };

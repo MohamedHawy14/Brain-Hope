@@ -7,16 +7,12 @@ using System.Threading.Tasks;
 
 namespace BrainHope.Services.DTO.Authentication.SingUp
 {
-    public class ResetPassword
+    public class VerifyOtpRequest
     {
         //[Required]
         //public string Email { get; set; }
 
         [Required]
-        public string NewPassword { get; set; }
-
-        [Required]
-        [Compare(nameof(NewPassword), ErrorMessage = "Passwords do not match.")]
-        public string ConfirmNewPassword { get; set; }
+        public string Otp { get; set; }
     }
 }

@@ -36,6 +36,18 @@ namespace BrainHope_.Api
             //signalr
             builder.Services.AddSignalR();
 
+            // Add in-memory distributed cache 
+            builder.Services.AddDistributedMemoryCache();
+
+            // Configure Session
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(5); 
+                options.Cookie.HttpOnly = true; 
+                options.Cookie.IsEssential = true; 
+            });
+
+
 
 
             #region JWT
@@ -134,6 +146,7 @@ namespace BrainHope_.Api
             app.UseAuthorization();
             app.MapHub<ChatHub>("/chathub");
 
+            app.UseSession();
 
             app.MapControllers();
 

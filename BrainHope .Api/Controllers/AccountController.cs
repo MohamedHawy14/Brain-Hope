@@ -9,12 +9,14 @@ using BrainHope.Services.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace BrainHope_.Api.Controllers
@@ -45,32 +47,7 @@ namespace BrainHope_.Api.Controllers
             this._authServices = authServices;
         }
 
-        //[HttpPost("Register")]
 
-        //public async Task<IActionResult> Register([FromBody] RegisterUser registerUser)
-        //{
-        //    var tokenResponse = await _authServices.CreateUserWithTokenAsync(registerUser);
-
-        //    // If user creation failed, return error response
-        //    if (!tokenResponse.IsSuccess)
-        //    {
-        //        return StatusCode(StatusCodes.Status500InternalServerError,
-        //            new Response { Message = tokenResponse.Message, IsSuccess = false });
-        //    }
-
-        //    // Assign roles to user
-        //    await _authServices.AssignRoleToUserAsync(registerUser.Roles, tokenResponse.Response.User);
-
-        //    // Generate email confirmation link
-        //    var confirmationLink = Url.Action(nameof(ConfirmEmail), "Account",
-        //        new { token = tokenResponse.Response.Token, email = registerUser.Email }, Request.Scheme);
-
-        //    var message = new Message(new string[] { registerUser.Email! }, "Confirmation Email Link", confirmationLink!);
-        //    _emailService.SendEmail(message);
-
-        //    return StatusCode(StatusCodes.Status200OK,
-        //        new Response { Status = "Success", Message = $"User Created Successfully & Email Sent To {registerUser.Email} Successfully.", IsSuccess = true });
-        //}
 
         [HttpPost("Register")]
         public async Task<IActionResult> Register([FromForm] RegisterUser registerUser)
@@ -118,112 +95,132 @@ namespace BrainHope_.Api.Controllers
         }
 
         [HttpPost("LogIn")]
-        public async Task<IActionResult> LogIn([FromBody] SignInDTO signInDTO)
+        public async Task<IActionResult> LogIn([FromForm] SignInDTO signInDTO)
         {
-
-            var loginOtpResponse = await _authServices.GetOtpByLoginAsync(signInDTO);
-            if (loginOtpResponse.Response != null)
+            
+            var user = await _userManager.FindByEmailAsync(signInDTO.Email);
+            if (user == null)
             {
-                var user = loginOtpResponse.Response.User;
-                if (user.TwoFactorEnabled)
-                {
-                    var token = loginOtpResponse.Response.Token;
-                    var message = new Message(new string[] { user.Email! }, "OTP Confrimation", token);
-                    _emailService.SendEmail(message);
-
-                    return StatusCode(StatusCodes.Status200OK,
-                     new Response { IsSuccess = loginOtpResponse.IsSuccess, Status = "Success", Message = $"We have sent an OTP to your Email {user.Email}" });
-                }
-                if (user != null && await _userManager.CheckPasswordAsync(user, signInDTO.Password))
-                {
-                    var serviceResponse = await _authServices.GetJwtTokenAsync(user);
-                    return Ok(serviceResponse);
-
-                }
+                return Unauthorized(new Response { IsSuccess = false, Message = "User not found." });
             }
-            return Unauthorized();
 
-
-
-        }
-
-        [HttpPost]
-        [Route("login-2FA")]
-        public async Task<IActionResult> LoginWithOTP(string code, string email)
-        {
-            var jwt = await _authServices.LoginUserWithJWTokenAsync(code, email);
-            if (jwt.IsSuccess)
+          
+            var passwordValid = await _userManager.CheckPasswordAsync(user, signInDTO.Password);
+            if (!passwordValid)
             {
-                return Ok(jwt);
+                return Unauthorized(new Response { IsSuccess = false, Message = "Invalid credentials." });
             }
-            return StatusCode(StatusCodes.Status404NotFound,
-                new Response { Status = "Error", Message = $"Invalid Code" });
+
+            var tokenResponse = await _authServices.GetJwtTokenAsync(user);
+            if (!tokenResponse.IsSuccess)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, tokenResponse);
+            }
+
+            return Ok(tokenResponse);
         }
 
         [HttpPost("ForgetPassword")]
         [AllowAnonymous]
-        public async Task<IActionResult> ForgetPassword([Required]string email)
+        public async Task<IActionResult> ForgetPassword([FromForm] string email)
         {
             var user = await _userManager.FindByEmailAsync(email);
-            if (user != null)
+            if (user == null)
             {
-                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-                var forgetPasswordlink = Url.Action(nameof(ResetPassword), "Account", new { token, email = user.Email }, Request.Scheme);
-                var message = new Message(new string[] { user.Email! }, "Forget Password Link", forgetPasswordlink!);
-                _emailService.SendEmail(message);
-                return StatusCode(StatusCodes.Status200OK,
-                       new Response { Status = "Success", Message = $"Password Changed Request is sent to {user.Email} Successfully. Please Open Ur Email And Click On Link" });
+                return BadRequest(new Response { IsSuccess = false, Message = "User not found.", Status = "Error" });
             }
-            return StatusCode(StatusCodes.Status400BadRequest,
-                      new Response { Status = "Error", Message = "Couldn't Send link to email , please try again." });
-        
+
+            var otp = GenerateSimpleOtp(user.Id);
+            var message = new Message(new string[] { user.Email! }, "Password Reset OTP", $"Your OTP is: {otp}");
+            _emailService.SendEmail(message);
+
+            HttpContext.Session.SetString("ResetPasswordUserId", user.Id);
+            HttpContext.Session.SetString("ResetPasswordOtp", otp); // Store the OTP in session
+
+            return Ok(new Response { IsSuccess = true, Message = $"OTP sent to {user.Email}.", Status = "Success" });
         }
 
-        [HttpGet("ResetPassword")]
-        public async Task<IActionResult> ResetPassword(string token , string email)
-        {
-            var model = new ResetPassword {Token=token , Email=email };
-            return Ok(new { model });
 
+        [HttpPost("VerifyOtp")]
+        [AllowAnonymous]
+        public async Task<IActionResult> VerifyOtp([FromForm] string otp)
+        {
+            var userId = HttpContext.Session.GetString("ResetPasswordUserId");
+            var storedOtp = HttpContext.Session.GetString("ResetPasswordOtp");
+
+            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(storedOtp))
+            {
+                return BadRequest(new Response { IsSuccess = false, Message = "User session expired.", Status = "Error" });
+            }
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return BadRequest(new Response { IsSuccess = false, Message = "User not found.", Status = "Error" });
+            }
+
+            if (storedOtp != otp)
+            {
+                return BadRequest(new Response { IsSuccess = false, Message = "Invalid OTP.", Status = "Error" });
+            }
+
+            HttpContext.Session.SetString("ResetPasswordUserId", user.Id);
+
+            return Ok(new Response { IsSuccess = true, Message = "OTP verified successfully.", Status = "Success" });
         }
 
         [HttpPost("ResetPassword")]
         [AllowAnonymous]
-        public async Task<IActionResult> ResetPassword(ResetPassword resetPassword)
+        public async Task<IActionResult> ResetPassword([FromForm] ResetPassword resetPasswordRequest)
         {
-            var user = await _userManager.FindByEmailAsync(resetPassword.Email);
-            if (user != null)
+            // Retrieve the UserId from the session
+            var userId = HttpContext.Session.GetString("ResetPasswordUserId");
+            if (string.IsNullOrEmpty(userId))
             {
-                var resetPassresult = await _userManager.ResetPasswordAsync(user, resetPassword.Token, resetPassword.Password);
-                if (!resetPassresult.Succeeded)
+                return BadRequest(new Response { IsSuccess = false, Message = "User session expired.", Status = "Error" });
+            }
+
+            
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return BadRequest(new Response { IsSuccess = false, Message = "User not found.", Status = "Error" });
+            }
+
+           
+            if (resetPasswordRequest.NewPassword != resetPasswordRequest.ConfirmNewPassword)
+            {
+                return BadRequest(new Response { IsSuccess = false, Message = "Passwords do not match.", Status = "Error" });
+            }
+
+           
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            
+            var result = await _userManager.ResetPasswordAsync(user, token, resetPasswordRequest.NewPassword);
+            if (!result.Succeeded)
+            {
+                return BadRequest(new Response
                 {
-                   foreach(var error in resetPassresult.Errors)
-                   {
-                        ModelState.AddModelError(error.Code, error.Description);
-                   }
-                    return Ok(ModelState);
-                }
-                
-                return StatusCode(StatusCodes.Status200OK,
-                       new Response { Status = "Success", Message =$"Password Has Been Changed " });
+                    IsSuccess = false,
+                    Message = "Password reset failed.",
+                    Status = "Error"
+                   
+                });
             }
-            return StatusCode(StatusCodes.Status400BadRequest,
-                      new Response { Status = "Error", Message = "SomeThing were Wrong." });
 
-        }
+            // Clear the session after successful password reset
+            HttpContext.Session.Remove("ResetPasswordUserId");
 
-        [HttpPost]
-        [Route("RefreshToken")]
-        public async Task<IActionResult> RefreshToken(LoginResponse tokens)
-        {
-            var jwt = await _authServices.RenewAccessTokenAsync(tokens);
-            if (jwt.IsSuccess)
+            return Ok(new Response
             {
-                return Ok(jwt);
-            }
-            return StatusCode(StatusCodes.Status404NotFound,
-                new Response { Status = "Success", Message = $"Invalid Code" });
+                IsSuccess = true,
+                Message = "Password reset successfully.",
+                Status = "Success"
+            });
         }
+
+     
 
 
 
@@ -239,7 +236,26 @@ namespace BrainHope_.Api.Controllers
                 signingCredentials: new SigningCredentials(authSigninkey, SecurityAlgorithms.HmacSha256)
                 );
             return token;
-        } 
+        }
+
+        private string GenerateSimpleOtp()
+        {
+            var random = new Random();
+            return random.Next(1000, 9999).ToString(); 
+        }
+        private string GenerateSimpleOtp(string userId)
+        {
+            var secretKey = _configuration["OtpSecretKey"];
+            var currentTime = DateTime.UtcNow.ToString("yyyyMMddHHmm");
+            var data = $"{userId}{secretKey}{currentTime}";
+
+            using (var sha256 = SHA256.Create())
+            {
+                var hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(data));
+                var otp = (BitConverter.ToInt32(hash, 0) % 10000);
+                return Math.Abs(otp).ToString("D4");
+            }
+        }
         #endregion
 
 

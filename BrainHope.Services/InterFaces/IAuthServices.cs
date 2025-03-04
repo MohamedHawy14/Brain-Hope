@@ -18,13 +18,10 @@ namespace BrainHope.Services.InterFaces
         Task<ApiResponse<CreateUserResponse>> CreateUserWithTokenAdminAsync(CreateUser createUser);
 
         Task<ApiResponse<List<string>>> AssignRoleToUserAsync(List<string> roles, ApplicationUser user);
-
-        Task<ApiResponse<LoginOtpResponse>> GetOtpByLoginAsync(SignInDTO signInDTO);
-
         Task<ApiResponse<LoginResponse>> GetJwtTokenAsync(ApplicationUser user);
 
-        Task<ApiResponse<LoginResponse>> LoginUserWithJWTokenAsync(string otp, string userName);
+        
 
-        Task<ApiResponse<LoginResponse>> RenewAccessTokenAsync(LoginResponse tokens); // give token & refresh token 
+         
     }
 }

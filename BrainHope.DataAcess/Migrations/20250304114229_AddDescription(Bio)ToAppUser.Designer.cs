@@ -4,6 +4,7 @@ using BrainHope.DataAcess.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BrainHope.DataAcess.Migrations
 {
     [DbContext(typeof(BrainHopeDbContext))]
-    partial class BrainHopeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250304114229_AddDescription(Bio)ToAppUser")]
+    partial class AddDescriptionBioToAppUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -296,21 +299,21 @@ namespace BrainHope.DataAcess.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "1eb009b6-17b1-4c64-8a56-9c770ddff16a",
+                            Id = "3279a0b5-971e-41d5-a8a1-1fbfe97636ca",
                             ConcurrencyStamp = "1",
                             Name = "Admin",
                             NormalizedName = "Admin"
                         },
                         new
                         {
-                            Id = "a23b2a12-9217-434c-b133-d31e72f2b2f1",
+                            Id = "9806dc4b-c9bf-4eaf-9879-8e18eee1e0ff",
                             ConcurrencyStamp = "2",
                             Name = "Patient",
                             NormalizedName = "Patient"
                         },
                         new
                         {
-                            Id = "c554be0e-e114-400e-9aee-b73ff7272fc9",
+                            Id = "108bb473-c022-424a-848d-cc81bd47e76a",
                             ConcurrencyStamp = "3",
                             Name = "Doctor",
                             NormalizedName = "Doctor"
