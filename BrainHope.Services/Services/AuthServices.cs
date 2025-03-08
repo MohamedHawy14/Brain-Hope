@@ -312,8 +312,29 @@ namespace BrainHope.Services.Services
             };
         }
 
-       
 
+        public async Task<ApiResponse<List<UserDetailsDTO>>> GetAllUsersAsync()
+        {
+            
+            var users = await _userManager.Users.ToListAsync();
+
+            
+            var userDtos = users.Select(u => new UserDetailsDTO
+            {
+                Id = u.Id,
+                UserName = u.UserName,
+                Email = u.Email,
+                NationalId = u.NationalId
+            }).ToList();
+
+            return new ApiResponse<List<UserDetailsDTO>>
+            {
+                IsSuccess = true,
+                StatusCode = 200,
+                Message = "Users retrieved successfully.",
+                Response = userDtos
+            };
+        }
 
 
         #region PrivateMethods

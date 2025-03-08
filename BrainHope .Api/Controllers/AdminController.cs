@@ -126,6 +126,17 @@ namespace BrainHope_.Api.Controllers
             return Ok(response);
         }
 
+        [HttpGet("GetAllUsers")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var result = await _authServices.GetAllUsersAsync();
+            if (!result.IsSuccess)
+            {
+                return StatusCode(result.StatusCode, result.Message);
+            }
+            return Ok(result.Response);
+        }
+
 
     }
 }

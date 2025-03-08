@@ -19,9 +19,10 @@ namespace BrainHope.Services.InterFaces
 
         Task<ApiResponse<List<string>>> AssignRoleToUserAsync(List<string> roles, ApplicationUser user);
         Task<ApiResponse<LoginResponse>> GetJwtTokenAsync(ApplicationUser user);
+        Task<ApiResponse<List<UserDetailsDTO>>> GetAllUsersAsync();
 
-        
 
-         
+
+
     }
 }
