@@ -156,6 +156,14 @@ namespace BrainHope.Services.Services
                 };
                 _context.Patients.Add(patient);
             }
+            else
+            {
+                var admin = new Admin { 
+                    UserId=user.Id
+                };
+                _context.Admins.Add(admin);
+
+            }
 
             await _context.SaveChangesAsync();
 

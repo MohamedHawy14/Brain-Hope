@@ -30,6 +30,7 @@ namespace BrainHope.DataAcess.Models
         // Relation with Users
         public virtual Doctor? Doctor { get; set; }
         public virtual Patient? Patient { get; set; }
+        public virtual Admin? Admin { get; set; }
 
         //chat
         public ICollection<UserConnection> UserConnections { get; set; }

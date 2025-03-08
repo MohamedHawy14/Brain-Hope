@@ -17,6 +17,7 @@ namespace BrainHope.DataAcess.Contexts
     {
         public DbSet<Doctor> Doctors { get; set; }
         public DbSet<Patient> Patients { get; set; }
+        public DbSet<Admin> Admins { get; set; }
         public DbSet<DoctorPatient> DoctorPatients { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
         public DbSet<Appointment> Appointments { get; set; }
@@ -42,7 +43,14 @@ namespace BrainHope.DataAcess.Contexts
                 .HasOne(a => a.Patient)
                 .WithOne(p => p.AppUser)
                 .HasForeignKey<Patient>(p => p.UserId)
-                .OnDelete(DeleteBehavior.Cascade); 
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Define One-to-One Relationship between ApplicationUser and Admin
+            builder.Entity<ApplicationUser>()
+                .HasOne(a => a.Admin)
+                .WithOne(p => p.AppUser)
+                .HasForeignKey<Admin>(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Define Composite Primary Key
             builder.Entity<DoctorPatient>()

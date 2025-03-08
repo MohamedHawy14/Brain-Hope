@@ -42,32 +42,33 @@ namespace BrainHope_.Api.Controllers
             return Ok(doctors);
         }
 
-        [HttpGet("GetDoctorByNationalId/{nationalId}")]
-        public async Task<IActionResult> GetDoctorByNationalId(string nationalId)
+        [HttpGet("GetDoctorByUserId/{userId}")]
+        public IActionResult GetDoctorByUserId(string userId)
         {
-            if (string.IsNullOrEmpty(nationalId))
+            if (string.IsNullOrEmpty(userId))
             {
-                return BadRequest("National ID is required.");
+                return BadRequest("User ID is required.");
             }
 
             var doctor = unitOfWork.Repository<Doctor>()
-                .Get(d => d.AppUser.NationalId == nationalId, includeProperties: "AppUser");
+                            .Get(d => d.UserId == userId, includeProperties: "AppUser");
 
             if (doctor == null)
             {
                 return NotFound("Doctor not found.");
             }
 
-            var doctorDto = new DoctorByNIdDTO
+            var doctorDto = new DoctorByUIdDTO
             {
                 Name = doctor.AppUser.UserName,
                 Description = doctor.AppUser.Description,
                 Address = doctor.AppUser.Address,
-                ProfilePhoto = doctor.AppUser.ProfilePhoto 
+                ProfilePhoto = doctor.AppUser.ProfilePhoto
             };
 
             return Ok(doctorDto);
         }
+
 
         [HttpGet("GetDoctorCalendlyLink/{doctorId}")]
         public async Task<IActionResult> GetDoctorCalendlyLink(int doctorId)

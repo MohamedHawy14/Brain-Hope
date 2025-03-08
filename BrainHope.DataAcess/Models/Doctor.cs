@@ -9,7 +9,7 @@ namespace BrainHope.DataAcess.Models
 {
     public class Doctor:ModelBase
     {
-        public  string? GratuedFrom { get; set; }
+        //public  string? GratuedFrom { get; set; }
         
         [Range(1,5)]
         public int Rate { get; set; }

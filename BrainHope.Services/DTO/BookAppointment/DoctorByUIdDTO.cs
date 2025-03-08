@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BrainHope.Services.DTO.BookAppointment
 {
-    public class DoctorByNIdDTO
+    public class DoctorByUIdDTO
     {
         public string Name { get; set; }
         public string Description { get; set; }
