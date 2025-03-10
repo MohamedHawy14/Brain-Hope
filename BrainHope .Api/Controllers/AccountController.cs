@@ -101,16 +101,23 @@ namespace BrainHope_.Api.Controllers
             var user = await _userManager.FindByEmailAsync(signInDTO.Email);
             if (user == null)
             {
-                return Unauthorized(new Response { IsSuccess = false, Message = "User not found." });
+                return Unauthorized(new Response { IsSuccess = false, Message = "User not found." , Status="Error"});
             }
 
-          
+            // Check if the email is confirmed.
+            if (!user.EmailConfirmed)
+            {
+                return Unauthorized(new Response { IsSuccess = false, Message = "Please confirm your email to login.", Status = "Error" });
+            }
+
+            
             var passwordValid = await _userManager.CheckPasswordAsync(user, signInDTO.Password);
             if (!passwordValid)
             {
-                return Unauthorized(new Response { IsSuccess = false, Message = "Invalid credentials." });
+                return Unauthorized(new Response { IsSuccess = false, Message = "Invalid credentials.", Status = "Error" });
             }
 
+           
             var tokenResponse = await _authServices.GetJwtTokenAsync(user);
             if (!tokenResponse.IsSuccess)
             {
@@ -119,6 +126,7 @@ namespace BrainHope_.Api.Controllers
 
             return Ok(tokenResponse);
         }
+
 
         [HttpPost("ForgetPassword")]
         [AllowAnonymous]
