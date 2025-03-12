@@ -15,7 +15,7 @@ namespace BrainHope_.Api.Controllers
 {
     [Route("Admin/[controller]")]
     [ApiController]
-    //[Authorize(Roles =SD.Role_Admin)]
+    [Authorize(Roles =SD.Role_Admin)]
     public class AdminController : ControllerBase
     {
 
