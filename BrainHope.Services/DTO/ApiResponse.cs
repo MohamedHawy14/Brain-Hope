@@ -12,6 +12,7 @@ namespace BrainHope.Services.DTO
         public bool IsSuccess { get; set; }
         public string? Message { get; set; }
         public int StatusCode { get; set; }
+        [JsonIgnore]
         public T? Response { get; set; }
     }
 }

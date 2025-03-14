@@ -172,12 +172,12 @@ namespace BrainHope.Services.Services
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
             response.IsSuccess = true;
-            response.Message = "User created successfully.";
-            response.Response = new CreateUserResponse
-            {
-                User = user,
-                Token = token
-            };
+            response.Message = "User created successfully. Please confirm your email (=>Spam If needed).";
+            //response.Response = new CreateUserResponse
+            //{
+            //    User = user,
+            //    Token = token
+            //};
 
             return response;
         }
@@ -262,14 +262,14 @@ namespace BrainHope.Services.Services
 
             return new ApiResponse<CreateUserResponse>
             {
-                Response = new CreateUserResponse
-                {
-                    User = user,
-                    Token = token
-                },
+                //Response = new CreateUserResponse
+                //{
+                //    User = user,
+                //    Token = token
+                //},
                 IsSuccess = true,
                 StatusCode = 201,
-                Message = "User created successfully. Please confirm your email."
+                Message = "User created successfully. Please confirm your email (=>Spam If needed)."
             };
         }
         public async Task<ApiResponse<LoginResponse>> GetJwtTokenAsync(ApplicationUser user)
