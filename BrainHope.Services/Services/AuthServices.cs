@@ -119,7 +119,7 @@ namespace BrainHope.Services.Services
             {
                 UserName = createUser.UserName,
                 Email = createUser.Email,
-                NationalId = createUser.NationalId  ,
+                NationalId = createUser.NationalId,
                 SecurityStamp = Guid.NewGuid().ToString(),
                 TwoFactorEnabled = true,
                 ProfilePhoto = datastream.ToArray()  // Save profile photo to database
@@ -158,8 +158,9 @@ namespace BrainHope.Services.Services
             }
             else
             {
-                var admin = new Admin { 
-                    UserId=user.Id
+                var admin = new Admin
+                {
+                    UserId = user.Id
                 };
                 _context.Admins.Add(admin);
 
@@ -231,7 +232,12 @@ namespace BrainHope.Services.Services
             var result = await _userManager.CreateAsync(user, registerUser.Password);
             if (!result.Succeeded)
             {
-                return new ApiResponse<CreateUserResponse> { IsSuccess = false, StatusCode = 500, Message = "User failed to create." };
+                return new ApiResponse<CreateUserResponse>
+                {
+                    IsSuccess = false,
+                    StatusCode = 500,
+                    Message = "User creation failed: " + string.Join(", ", result.Errors.Select(e => e.Description))
+                };
             }
 
             // Automatically assign "Patient" role
@@ -266,7 +272,6 @@ namespace BrainHope.Services.Services
                 Message = "User created successfully. Please confirm your email."
             };
         }
-
         public async Task<ApiResponse<LoginResponse>> GetJwtTokenAsync(ApplicationUser user)
         {
             var authClaims = new List<Claim>

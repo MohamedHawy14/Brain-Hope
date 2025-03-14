@@ -13,7 +13,8 @@ namespace BrainHope.Services.DTO.Authentication.SignIn
         [Required(ErrorMessage ="Email Is Required!")]
         [EmailAddress]
         public string Email { get; set; }
-        [Required(ErrorMessage = "Password Is Required!")]
+        [Required(ErrorMessage = "Password is required.")]
+        [DataType(DataType.Password)]
         public string Password { get; set; }
     }
 }

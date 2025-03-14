@@ -91,6 +91,20 @@ namespace BrainHope_.Api
             // Add services to the container.
             builder.Services.AddScoped<IAuthServices, AuthServices>();
 
+            // Add Cors
+            var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy(MyAllowSpecificOrigins,
+                    policy =>
+                    {
+                        policy.AllowAnyOrigin() 
+                              .AllowAnyMethod()  
+                              .AllowAnyHeader(); 
+                    });
+            });
+
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -131,20 +145,26 @@ namespace BrainHope_.Api
         });
             });
             #endregion
-
+         
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
+            if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
 
             app.UseHttpsRedirection();
+            app.UseCors(MyAllowSpecificOrigins);
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapHub<ChatHub>("/chathub");
+            app.UseSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "Brain Hope API v1");
+                options.RoutePrefix = string.Empty; 
+            });
 
             app.UseSession();
 

@@ -9,13 +9,14 @@ namespace BrainHope.Services.DTO.Authentication.SingUp
 {
     public class ResetPassword
     {
-        //[Required]
-        //public string Email { get; set; }
+     
 
-        [Required]
+        [Required(ErrorMessage = "Password is required.")]
+        [DataType(DataType.Password)]
         public string NewPassword { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Confirm Password is required.")]
+        [DataType(DataType.Password)]
         [Compare(nameof(NewPassword), ErrorMessage = "Passwords do not match.")]
         public string ConfirmNewPassword { get; set; }
     }
