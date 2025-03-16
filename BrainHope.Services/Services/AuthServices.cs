@@ -32,8 +32,8 @@ namespace BrainHope.Services.Services
         private readonly IConfiguration _configuration;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly BrainHopeDbContext _context;
-        private new List<string> _allowedextention = new List<string> { ".jpg", ".png" };
-        private long _maxallowImagesize = 3145728;
+        //private new List<string> _allowedextention = new List<string> { ".jpg", ".png" };
+        //private long _maxallowImagesize = 3145728;
 
         public AuthServices(UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
@@ -49,31 +49,7 @@ namespace BrainHope.Services.Services
             this._context = context;
         }
 
-        public async Task<ApiResponse<List<string>>> AssignRoleToUserAsync(List<string> roles, ApplicationUser user)
-        {
-            var assignedRole = new List<string>();
-            foreach (var role in roles)
-            {
-                if (await _roleManager.RoleExistsAsync(role))
-                {
-                    if (!await _userManager.IsInRoleAsync(user, role))
-                    {
-                        await _userManager.AddToRoleAsync(user, role);
-                        assignedRole.Add(role);
-                    }
-                }
-            }
-
-            return new ApiResponse<List<string>>
-            {
-                IsSuccess = true,
-                StatusCode = 200,
-                Message = "Roles has been assigned"
-            ,
-                Response = assignedRole
-            };
-        }
-
+       
         public async Task<ApiResponse<CreateUserResponse>> CreateUserWithTokenAdminAsync(CreateUser createUser)
         {
             var response = new ApiResponse<CreateUserResponse>();
@@ -101,18 +77,14 @@ namespace BrainHope.Services.Services
                 response.Message = "User with this National Id already exists.";
                 return response;
             }
-
-            if (!_allowedextention.Contains(Path.GetExtension(createUser.ProfilePhoto.FileName).ToLower()))
-                return new ApiResponse<CreateUserResponse> { IsSuccess = false, StatusCode = 500, Message = "Only .jpg & .png" };
-            if (createUser.ProfilePhoto.Length > _maxallowImagesize)
-                return new ApiResponse<CreateUserResponse> { IsSuccess = false, StatusCode = 500, Message = "Max Allowed Size Is 3Mb" };
-
-
-
+            // Save profile photo and get the path
+            string? profilePhotoPath = null;
+            if (createUser.ProfilePhoto != null)
+            {
+                profilePhotoPath = await ImageHelper.SaveImageAsync(createUser.ProfilePhoto);
+            }
 
 
-            using var datastream = new MemoryStream();
-            await createUser.ProfilePhoto.CopyToAsync(datastream);
 
             // Create a new ApplicationUser object
             var user = new ApplicationUser
@@ -122,7 +94,7 @@ namespace BrainHope.Services.Services
                 NationalId = createUser.NationalId,
                 SecurityStamp = Guid.NewGuid().ToString(),
                 TwoFactorEnabled = true,
-                ProfilePhoto = datastream.ToArray()  // Save profile photo to database
+                ProfilePhoto = profilePhotoPath  // Save profile photo to database
             };
 
             // Create user in Identity
@@ -183,7 +155,8 @@ namespace BrainHope.Services.Services
         }
 
 
-        public async Task<ApiResponse<CreateUserResponse>> CreateUserWithTokenAsync(RegisterUser registerUser)
+       
+        public async Task<ApiResponse<CreateUserResponse>> CreateUserWithTokenAsync(RegisterUser registerUser, string? profilePhotoPath)
         {
             // Check if the user already exists
             var existUser = await _userManager.FindByEmailAsync(registerUser.Email);
@@ -206,17 +179,18 @@ namespace BrainHope.Services.Services
                 return new ApiResponse<CreateUserResponse> { IsSuccess = false, StatusCode = 403, Message = "National ID is already registered!" };
             }
 
-            if (!_allowedextention.Contains(Path.GetExtension(registerUser.ProfilePhoto.FileName).ToLower()))
-                return new ApiResponse<CreateUserResponse> { IsSuccess = false, StatusCode = 500, Message = "Only .jpg & .png" };
-            if (registerUser.ProfilePhoto.Length > _maxallowImagesize)
-                return new ApiResponse<CreateUserResponse> { IsSuccess = false, StatusCode = 500, Message = "Max Allowed Size Is 3Mb" };
+            // Save profile photo and get the path
+
+            if (registerUser.ProfilePhoto != null)
+            {
+                string fileName = registerUser.ProfilePhoto.FileName; 
+                profilePhotoPath = await ImageHelper.SaveImageAsync(registerUser.ProfilePhoto);
+            }
 
 
 
 
 
-            using var datastream = new MemoryStream();
-            await registerUser.ProfilePhoto.CopyToAsync(datastream);
 
             // Create new user object
             ApplicationUser user = new()
@@ -226,7 +200,7 @@ namespace BrainHope.Services.Services
                 NationalId = registerUser.NationalId,
                 SecurityStamp = Guid.NewGuid().ToString(),
                 TwoFactorEnabled = true,
-                ProfilePhoto = datastream.ToArray()  // Save profile photo to database
+                ProfilePhoto = profilePhotoPath // Save profile photo to database
             };
 
             var result = await _userManager.CreateAsync(user, registerUser.Password);
@@ -272,6 +246,8 @@ namespace BrainHope.Services.Services
                 Message = "User created successfully. Please confirm your email (=>Spam If needed)."
             };
         }
+
+
         public async Task<ApiResponse<LoginResponse>> GetJwtTokenAsync(ApplicationUser user)
         {
             var authClaims = new List<Claim>
@@ -316,6 +292,33 @@ namespace BrainHope.Services.Services
                 Message = $"Token created"
             };
         }
+
+
+        public async Task<ApiResponse<List<string>>> AssignRoleToUserAsync(List<string> roles, ApplicationUser user)
+        {
+            var assignedRole = new List<string>();
+            foreach (var role in roles)
+            {
+                if (await _roleManager.RoleExistsAsync(role))
+                {
+                    if (!await _userManager.IsInRoleAsync(user, role))
+                    {
+                        await _userManager.AddToRoleAsync(user, role);
+                        assignedRole.Add(role);
+                    }
+                }
+            }
+
+            return new ApiResponse<List<string>>
+            {
+                IsSuccess = true,
+                StatusCode = 200,
+                Message = "Roles has been assigned"
+            ,
+                Response = assignedRole
+            };
+        }
+
 
 
         public async Task<ApiResponse<List<UserDetailsDTO>>> GetAllUsersAsync()

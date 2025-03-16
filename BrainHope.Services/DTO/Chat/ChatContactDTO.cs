@@ -13,6 +13,6 @@ namespace BrainHope.Services.DTO.Chat
         public string LastMessage { get; set; }
         public DateTime LastMessageTime { get; set; }
 
-        public byte[] ProfilePhoto { get; set; }
+        public string ProfilePhoto { get; set; }
     }
 }

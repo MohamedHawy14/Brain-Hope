@@ -8,6 +8,6 @@ namespace BrainHope.Services.DTO.Profile
 {
     public class UpdateProfileGetDTO:UpdateProfileDTO
     {
-        public byte[]? ProfilePhoto { get; set; }
+        public string? ProfilePhoto { get; set; }
     }
 }

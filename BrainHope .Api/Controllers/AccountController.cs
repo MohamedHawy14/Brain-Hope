@@ -18,6 +18,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Utilites;
 
 namespace BrainHope_.Api.Controllers
 {
@@ -57,7 +58,22 @@ namespace BrainHope_.Api.Controllers
                 return BadRequest(ModelState);
             }
 
-            var response = await _authServices.CreateUserWithTokenAsync(registerUser);
+            string? profilePhotoPath = null;
+
+            if (registerUser.ProfilePhoto != null)
+            {
+                try
+                {
+                    profilePhotoPath = await ImageHelper.SaveImageAsync(registerUser.ProfilePhoto);
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(new { message = "Error saving image: " + ex.Message });
+                }
+            }
+
+            // Pass profilePhotoPath to the registration service
+            var response = await _authServices.CreateUserWithTokenAsync(registerUser, profilePhotoPath);
 
             if (!response.IsSuccess)
             {
@@ -68,31 +84,28 @@ namespace BrainHope_.Api.Controllers
             var confirmationLink = Url.Action(nameof(ConfirmEmail), "Account",
                 new { token = response.Response.Token, email = registerUser.Email }, Request.Scheme);
 
-            #region Message
-
+            #region Email Message
             var message = new Message(
-            new string[] { registerUser.Email! },
-"Confirm Your Email",
-$@"
-    <html>
-    <body>
-        <p>Hello {registerUser.UserName},</p>
-        <p>Thank you for registering. Please confirm your email by clicking the button below:</p>
-        <p>
-            <a href='{confirmationLink}' 
-               style='display: inline-block; padding: 10px 20px; font-size: 16px; color: white; 
-                      background-color: #007bff; text-decoration: none; border-radius: 5px;'>
-                Confirm Email
-            </a>
-        </p>
-        <p>Best regards,<br>BrainHope Team</p>
-    </body>
-    </html>
-"
-
-
+                new string[] { registerUser.Email! },
+                "Confirm Your Email",
+                $@"
+        <html>
+        <body>
+            <p>Hello {registerUser.UserName},</p>
+            <p>Thank you for registering. Please confirm your email by clicking the button below:</p>
+            <p>
+                <a href='{confirmationLink}' 
+                   style='display: inline-block; padding: 10px 20px; font-size: 16px; color: white; 
+                          background-color: #007bff; text-decoration: none; border-radius: 5px;'>
+                    Confirm Email
+                </a>
+            </p>
+            <p>Best regards,<br>BrainHope Team</p>
+        </body>
+        </html>"
             );
             #endregion
+
             try
             {
                 _emailService.SendEmail(message);
@@ -101,7 +114,6 @@ $@"
             {
                 return StatusCode(500, "Email error: " + ex.Message);
             }
-
 
             return Ok(response);
         }
