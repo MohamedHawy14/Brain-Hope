@@ -25,7 +25,7 @@ namespace BrainHope.DataAcess.Models
      
 
         // Profile Photo stored as byte array
-        public byte[]? ProfilePhoto { get; set; }
+        public string? ProfilePhoto { get; set; }
 
         // Relation with Users
         public virtual Doctor? Doctor { get; set; }

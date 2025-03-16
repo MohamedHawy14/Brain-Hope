@@ -4,6 +4,7 @@ using BrainHope.Services.DTO.Profile;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Utilites;
 
 namespace BrainHope_.Api.Controllers
 {
@@ -13,8 +14,7 @@ namespace BrainHope_.Api.Controllers
     {
        
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly List<string> _allowedExtensions = new List<string> { ".jpg", ".png" };
-        private readonly long _maxAllowedImageSize = 3145728;
+       
 
         public ProfileController(UserManager<ApplicationUser> userManager)
         {
@@ -44,12 +44,13 @@ namespace BrainHope_.Api.Controllers
             var result = await _userManager.UpdateAsync(user);
             if (result.Succeeded)
             {
+                var baseUrl = $"{Request.Scheme}://{Request.Host}";
                 // Optionally return the updated profile
                 var profileDTO = new UserProfileDTO
                 {
                     UserName = user.UserName,
                     Email = user.Email,
-                    ProfilePhoto = user.ProfilePhoto ?? new byte[0],
+                    ProfilePhoto = string.IsNullOrEmpty(user.ProfilePhoto) ? null : $"{baseUrl}{user.ProfilePhoto}",
                     Bio = user.Description,
                     Address = user.Address,
                     PhoneNumber = user.PhoneNumber
@@ -75,12 +76,14 @@ namespace BrainHope_.Api.Controllers
                 return NotFound("User not found.");
             }
 
-            
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+
+
             var profileDTO = new UserProfileDTO
             {
                 UserName = user.UserName,
                 Email = user.Email,
-                ProfilePhoto = user.ProfilePhoto ?? new byte[0],
+                ProfilePhoto = string.IsNullOrEmpty(user.ProfilePhoto) ? null : $"{baseUrl}{user.ProfilePhoto}",
                 Bio = user.Description,
                 Address = user.Address,
                 PhoneNumber = user.PhoneNumber
@@ -98,10 +101,12 @@ namespace BrainHope_.Api.Controllers
                 return NotFound("User not found.");
             }
 
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+
             var profileDTO = new UpdateProfileGetDTO
             {
                 UserName = user.UserName,
-                ProfilePhoto = user.ProfilePhoto ?? new byte[0],
+                ProfilePhoto = string.IsNullOrEmpty(user.ProfilePhoto) ? null : $"{baseUrl}{user.ProfilePhoto}",
                 Bio = user.Description,
                 Address = user.Address,
                 PhoneNumber = user.PhoneNumber
@@ -119,39 +124,42 @@ namespace BrainHope_.Api.Controllers
                 return BadRequest(ModelState);
             }
 
-            
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
                 return NotFound("User not found.");
             }
 
-            
-            user.UserName = updateProfile.UserName;
-            user.Description = updateProfile.Bio;
-            user.Address = updateProfile.Address;
-            user.PhoneNumber = updateProfile.PhoneNumber;
 
-            // If a new profile photo is provided, validate and update.
-            if (updateProfile.ProfilePhoto != null)
+            #region Update only provided fields, keep others unchanged
+            if (!string.IsNullOrWhiteSpace(updateProfile.UserName))
             {
-                var ext = Path.GetExtension(updateProfile.ProfilePhoto.FileName).ToLower();
-                if (!_allowedExtensions.Contains(ext))
-                {
-                    return BadRequest("Only .jpg & .png files are allowed.");
-                }
-
-                if (updateProfile.ProfilePhoto.Length > _maxAllowedImageSize)
-                {
-                    return BadRequest("Max allowed size is 3MB.");
-                }
-
-                using var dataStream = new MemoryStream();
-                await updateProfile.ProfilePhoto.CopyToAsync(dataStream);
-                user.ProfilePhoto = dataStream.ToArray();
+                user.UserName = updateProfile.UserName;
             }
 
-           
+            if (!string.IsNullOrWhiteSpace(updateProfile.Bio))
+            {
+                user.Description = updateProfile.Bio;
+            }
+
+            if (!string.IsNullOrWhiteSpace(updateProfile.Address))
+            {
+                user.Address = updateProfile.Address;
+            }
+
+            if (!string.IsNullOrWhiteSpace(updateProfile.PhoneNumber))
+            {
+                user.PhoneNumber = updateProfile.PhoneNumber;
+            } 
+            #endregion
+
+            // Handle Profile Photo Upload
+            if (updateProfile.ProfilePhoto != null)
+            {
+                string photoUrl = await ImageHelper.SaveImageAsync(updateProfile.ProfilePhoto);
+                user.ProfilePhoto = photoUrl; // Store full URL in DB
+            }
+
             var result = await _userManager.UpdateAsync(user);
             if (!result.Succeeded)
             {
@@ -159,12 +167,13 @@ namespace BrainHope_.Api.Controllers
                 return StatusCode(500, new { message = "Profile update failed.", errors });
             }
 
-           
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+
             var updatedProfile = new UserProfileDTO
             {
                 UserName = user.UserName,
                 Email = user.Email,
-                ProfilePhoto = user.ProfilePhoto ?? new byte[0],
+                ProfilePhoto = string.IsNullOrEmpty(user.ProfilePhoto) ? null : $"{baseUrl}{user.ProfilePhoto}",
                 Bio = user.Description,
                 Address = user.Address,
                 PhoneNumber = user.PhoneNumber

@@ -44,6 +44,6 @@ namespace BrainHope.DataAcess.Models.Chat
         //public string MessageType { get; set; } = SD.Message_Text;
 
         // When MessageType is "image", this holds the binary data
-        public byte[]? Image { get; set; }
+        public string? Image { get; set; }
     }
 }

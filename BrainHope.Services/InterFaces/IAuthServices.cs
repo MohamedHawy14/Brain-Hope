@@ -14,7 +14,7 @@ namespace BrainHope.Services.InterFaces
 {
     public interface IAuthServices
     {
-        Task<ApiResponse<CreateUserResponse>> CreateUserWithTokenAsync(RegisterUser registerUser);
+        Task<ApiResponse<CreateUserResponse>> CreateUserWithTokenAsync(RegisterUser registerUser, string? profilePhotoPath);
         Task<ApiResponse<CreateUserResponse>> CreateUserWithTokenAdminAsync(CreateUser createUser);
 
         Task<ApiResponse<List<string>>> AssignRoleToUserAsync(List<string> roles, ApplicationUser user);
