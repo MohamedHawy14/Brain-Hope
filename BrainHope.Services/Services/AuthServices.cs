@@ -264,8 +264,8 @@ namespace BrainHope.Services.Services
             {
                 Response = new CreateUserResponse
                 {
-                    User = user,
-                    Token = token
+                    User = null,
+                    Token = null
                 },
                 IsSuccess = true,
                 StatusCode = 201,

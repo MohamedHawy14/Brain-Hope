@@ -19,12 +19,12 @@ namespace BrainHope.Services.DTO.Authentication.SingUp
 
         [Required(ErrorMessage = "Password is required.")]
         [DataType(DataType.Password)]
-        public string Password { get; set; } 
+        public string Password { get; set; }
 
         [Required(ErrorMessage = "Confirm Password is required.")]
         [DataType(DataType.Password)]
         [Compare("Password", ErrorMessage = "Passwords do not match.")]
-        public string ConfirmPassword { get; set; } 
+        public string ConfirmPassword { get; set; }
 
         [Required(ErrorMessage = "National ID is required.")]
         [StringLength(14, MinimumLength = 14, ErrorMessage = "National ID must be exactly 14 characters.")]
