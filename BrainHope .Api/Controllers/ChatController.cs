@@ -32,54 +32,42 @@ namespace BrainHope_.Api.Controllers
             if (messageDto == null)
                 return BadRequest("Invalid message data.");
 
-     
             var chatMessage = new ChatMessage
             {
                 SenderId = messageDto.SenderId,
                 ReceiverId = messageDto.ReceiverId,
                 Message = messageDto.Message,
-            
-                
+                Image = null // Default value
             };
 
-            
-            if (messageDto.image != null)
+            // Handle image upload
+            if (messageDto.Image != null)
             {
-                // Validate file extension.
-                var ext = Path.GetExtension(messageDto.image.FileName).ToLower();
-                if (!_allowedExtensions.Contains(ext))
+                try
                 {
-                    return BadRequest("Only .jpg & .png files are allowed.");
+                    chatMessage.Image = await ImageHelper.SaveImageAsync(messageDto.Image);
                 }
-
-                // Validate file size.
-                if (messageDto.image.Length > _maxAllowedImageSize)
+                catch (Exception ex)
                 {
-                    return BadRequest("Max allowed size is 3MB.");
+                    return BadRequest(ex.Message);
                 }
-
-                using var dataStream = new MemoryStream();
-                await messageDto.image.CopyToAsync(dataStream);
-                chatMessage.Image = dataStream.ToArray();
-
-              
             }
 
-          
             var savedMessage = await _unitOfWork.ChatRepository.SendMessage(chatMessage);
             await _unitOfWork.Complete();
 
-        
             var response = new
             {
                 senderId = savedMessage.SenderId,
                 receiverId = savedMessage.ReceiverId,
                 message = savedMessage.Message,
-                image=savedMessage.Image
+                image = savedMessage.Image // Full URL now returned
             };
 
             return Ok(response);
         }
+
+
 
         [HttpGet("history/{user1}/{user2}")]
         public async Task<IActionResult> GetChatHistory(string user1, string user2)
@@ -91,7 +79,6 @@ namespace BrainHope_.Api.Controllers
                 receiverId = m.ReceiverId,
                 message = m.Message,
                 time = m.Time,
-                
                 image = m.Image,
                
             });
@@ -117,28 +104,26 @@ namespace BrainHope_.Api.Controllers
         [HttpGet("contacts/{userId}")]
         public async Task<IActionResult> GetChatContacts(string userId)
         {
-            // Get all messages for the user (sent or received)
             var messages = await _unitOfWork.ChatRepository.GetAllMessagesForUser(userId);
 
-            // Group messages by the contact id (if current user is sender then contact is receiver, else sender)
             var contactGroups = messages.GroupBy(m => m.SenderId == userId ? m.ReceiverId : m.SenderId).ToList();
             var contactIds = contactGroups.Select(g => g.Key).Distinct().ToList();
 
-            // Use UserManager to fetch user details from AspNetUsers
+            string baseUrl = "https://braincancer.runasp.net"; // Change this to your domain
+
             var users = await _userManager.Users
                 .Where(u => contactIds.Contains(u.Id))
                 .Select(u => new
                 {
                     u.Id,
                     u.UserName,
-                    u.ProfilePhoto // Include the profile photo
+                    ProfilePhoto = !string.IsNullOrEmpty(u.ProfilePhoto) ? $"{baseUrl}{u.ProfilePhoto}" : null
                 })
                 .ToListAsync();
 
             var contacts = contactGroups.Select(g =>
             {
                 var lastMessage = g.OrderByDescending(m => m.Time).First();
-                // Find the user corresponding to the contact id
                 var contactUser = users.FirstOrDefault(u => u.Id == g.Key);
                 return new ChatContactDTO
                 {
@@ -146,12 +131,13 @@ namespace BrainHope_.Api.Controllers
                     LastMessage = lastMessage.Message,
                     LastMessageTime = lastMessage.Time,
                     ContactUserName = contactUser?.UserName ?? g.Key,
-                    ProfilePhoto = contactUser?.ProfilePhoto // Add the profile photo
+                    ProfilePhoto = contactUser?.ProfilePhoto // Ensure full URL
                 };
             }).ToList();
 
             return Ok(contacts);
         }
+
 
     }
 }

@@ -13,6 +13,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using BrainHope.Services.Hubs;
+using Microsoft.AspNetCore.HttpOverrides;
 
 namespace BrainHope_.Api
 {
@@ -147,6 +148,14 @@ namespace BrainHope_.Api
             #endregion
          
             var app = builder.Build();
+            // Configure forwarded headers before anything else
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.All
+            });
+
+            // Enable serving static files from wwwroot
+            app.UseStaticFiles();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment() || app.Environment.IsProduction())

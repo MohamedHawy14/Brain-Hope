@@ -10,7 +10,7 @@ namespace BrainHope.Services.DTO.Profile
     {
         public string UserName { get; set; }
         public string Email { get; set; }
-        public byte[] ProfilePhoto { get; set; }
+        public string ProfilePhoto { get; set; }
         public string? Bio { get; set; } //Description in app user
         public string? Address { get; set; }
         public string? PhoneNumber { get; set; }

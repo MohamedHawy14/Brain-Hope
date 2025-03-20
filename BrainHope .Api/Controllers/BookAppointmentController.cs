@@ -3,6 +3,7 @@ using BrainHope.DataAcess.Repositry.IRepository;
 using BrainHope.Services.DTO.BookAppointment;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace BrainHope_.Api.Controllers
 {
@@ -16,11 +17,12 @@ namespace BrainHope_.Api.Controllers
         {
             this.unitOfWork = unitOfWork;
         }
+
         [HttpGet("GetAllDoctors")]
         public async Task<IActionResult> GetAllDoctors(string? name = null)
         {
             var query = unitOfWork.Repository<Doctor>()
-                .GetAll(includeProperties: "AppUser") 
+                .GetAllQuery(includeProperties: "AppUser")
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(name))
@@ -28,19 +30,22 @@ namespace BrainHope_.Api.Controllers
                 query = query.Where(d => d.AppUser.UserName.Contains(name)); // Search by Name
             }
 
-            var doctors = query
-                .OrderBy(d => d.Rate)  // Order by Rate in ascending order
+            var doctors = await query
+                .OrderBy(d => d.Rate)
                 .Select(d => new AllDoctorDTO
                 {
                     Name = d.AppUser.UserName,
                     Description = d.AppUser.Description,
                     Rate = d.Rate,
-                    ProfilePhoto = d.AppUser.ProfilePhoto // Keep as byte[]
+                    ProfilePhoto = string.IsNullOrEmpty(d.AppUser.ProfilePhoto)
+                    ? null
+                    : $"{Request.Scheme}://{Request.Host}{d.AppUser.ProfilePhoto}"
                 })
-                .ToList();
+                .ToListAsync(); 
 
             return Ok(doctors);
         }
+
 
         [HttpGet("GetDoctorByUserId/{userId}")]
         public IActionResult GetDoctorByUserId(string userId)
@@ -63,7 +68,9 @@ namespace BrainHope_.Api.Controllers
                 Name = doctor.AppUser.UserName,
                 Description = doctor.AppUser.Description,
                 Address = doctor.AppUser.Address,
-                ProfilePhoto = doctor.AppUser.ProfilePhoto
+                ProfilePhoto = string.IsNullOrEmpty(doctor.AppUser.ProfilePhoto)
+              ? null
+              : $"{Request.Scheme}://{Request.Host}{doctor.AppUser.ProfilePhoto}" 
             };
 
             return Ok(doctorDto);
