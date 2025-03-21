@@ -234,12 +234,12 @@ namespace BrainHope.Services.Services
             // Generate email confirmation token
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
-            return new ApiResponse<CreateUserResponse>
+           return new ApiResponse<CreateUserResponse>
             {
                 Response = new CreateUserResponse
                 {
-                    User = null,
-                    Token = null
+                    User = user,
+                    Token = token
                 },
                 IsSuccess = true,
                 StatusCode = 201,
