@@ -252,8 +252,9 @@ namespace BrainHope.Services.Services
         {
             var authClaims = new List<Claim>
                 {
-                    new Claim(ClaimTypes.Email, user.Email),
-                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                 new Claim(ClaimTypes.NameIdentifier, user.Id),
+                 new Claim(ClaimTypes.Email, user.Email),
+                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 };
 
             var userRoles = await _userManager.GetRolesAsync(user);
@@ -400,6 +401,7 @@ namespace BrainHope.Services.Services
                 throw new SecurityTokenException("Invalid token.", ex);
             }
         }
+
         #endregion
     }
 }

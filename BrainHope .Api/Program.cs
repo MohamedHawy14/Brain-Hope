@@ -14,6 +14,7 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using BrainHope.Services.Hubs;
 using Microsoft.AspNetCore.HttpOverrides;
+using Utilites;
 
 namespace BrainHope_.Api
 {
@@ -33,6 +34,7 @@ namespace BrainHope_.Api
             builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IChatRepository, ChatRepository>();
+            builder.Services.AddScoped<IPostRepository, PostRepository>();
 
             //signalr
             builder.Services.AddSignalR();
@@ -75,8 +77,10 @@ namespace BrainHope_.Api
                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secret"])) // FIXED TYPO
                 };
             });
+            builder.Services.AddAuthorization();
 
             #endregion
+
 
             #region Email
             var Configure = builder.Configuration;
@@ -169,6 +173,7 @@ namespace BrainHope_.Api
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapHub<ChatHub>("/chathub");
+            app.MapHub<PostHub>("/postHub");
             app.UseSwaggerUI(options =>
             {
                 options.SwaggerEndpoint("/swagger/v1/swagger.json", "Brain Hope API v1");

@@ -1,8 +1,10 @@
 ﻿using BrainHope.DataAcess.Models;
 using BrainHope.DataAcess.Models.Chat;
+using BrainHope.DataAcess.Models.Posts;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,10 +22,12 @@ namespace BrainHope.DataAcess.Contexts
         public DbSet<Admin> Admins { get; set; }
         public DbSet<DoctorPatient> DoctorPatients { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
-        public DbSet<Appointment> Appointments { get; set; }
+       // public DbSet<Appointment> Appointments { get; set; }
 
         public DbSet<UserConnection> UserConnections { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
+
+        public DbSet<Post> Posts { get; set; }
         public BrainHopeDbContext(DbContextOptions<BrainHopeDbContext> options):base(options)
         {
             
@@ -69,17 +73,17 @@ namespace BrainHope.DataAcess.Contexts
                 .HasForeignKey(dp => dp.PatientId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-           builder.Entity<Appointment>()
-               .HasOne(a => a.Doctor)
-               .WithMany(d => d.Appointments) 
-               .HasForeignKey(a => a.DoctorId)
-               .OnDelete(DeleteBehavior.Cascade); 
+           //builder.Entity<Appointment>()
+           //    .HasOne(a => a.Doctor)
+           //    .WithMany(d => d.Appointments) 
+           //    .HasForeignKey(a => a.DoctorId)
+           //    .OnDelete(DeleteBehavior.Cascade); 
 
-            builder.Entity<Appointment>()
-                .HasOne(a => a.Patient)
-                .WithMany(p => p.Appointments) 
-                .HasForeignKey(a => a.PatientId)
-                .OnDelete(DeleteBehavior.Cascade);
+           // builder.Entity<Appointment>()
+           //     .HasOne(a => a.Patient)
+           //     .WithMany(p => p.Appointments) 
+           //     .HasForeignKey(a => a.PatientId)
+           //     .OnDelete(DeleteBehavior.Cascade);
 
             //chat 
             builder.Entity<UserConnection>()

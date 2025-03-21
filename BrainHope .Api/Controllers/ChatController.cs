@@ -17,8 +17,8 @@ namespace BrainHope_.Api.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly List<string> _allowedExtensions = new List<string> { ".jpg", ".png" };
-        private readonly long _maxAllowedImageSize = 3145728; // 3MB
+        //private readonly List<string> _allowedExtensions = new List<string> { ".jpg", ".png" };
+        //private readonly long _maxAllowedImageSize = 3145728; // 3MB
 
         public ChatController(IUnitOfWork unitOfWork , UserManager<ApplicationUser> userManager )
         {
@@ -66,8 +66,6 @@ namespace BrainHope_.Api.Controllers
 
             return Ok(response);
         }
-
-
 
         [HttpGet("history/{user1}/{user2}")]
         public async Task<IActionResult> GetChatHistory(string user1, string user2)
