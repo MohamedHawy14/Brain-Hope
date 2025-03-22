@@ -181,12 +181,17 @@ namespace BrainHope_.Api.Controllers
                 return BadRequest(new Response { IsSuccess = false, Message = "User not found.", Status = "Error" });
             }
 
-            var otp = GenerateSimpleOtp(user.Id);
+            var otp = GenerateSimpleOtp();
+
+            // Store OTP in database with expiration (5 minutes)
+            user.ResetOtp = otp;
+            user.OtpExpiration = DateTime.UtcNow.AddMinutes(5);
+            await _userManager.UpdateAsync(user);
+
             var message = new Message(new string[] { user.Email! }, "Password Reset OTP", $"Your OTP is: {otp}");
             _emailService.SendEmail(message);
 
-            HttpContext.Session.SetString("ResetPasswordUserId", user.Id);
-            HttpContext.Session.SetString("ResetPasswordOtp", otp); // Store the OTP in session
+       
 
             return Ok(new Response { IsSuccess = true, Message = $"OTP sent to {user.Email}.", Status = "Success" });
         }
@@ -194,84 +199,57 @@ namespace BrainHope_.Api.Controllers
 
         [HttpPost("VerifyOtp")]
         [AllowAnonymous]
-        public async Task<IActionResult> VerifyOtp([FromForm] string otp)
+        public async Task<IActionResult> VerifyOtp([FromForm] VerifyOtpRequest request)
         {
-            var userId = HttpContext.Session.GetString("ResetPasswordUserId");
-            var storedOtp = HttpContext.Session.GetString("ResetPasswordOtp");
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.ResetOtp == request.Otp);
 
-            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(storedOtp))
-            {
-                return BadRequest(new Response { IsSuccess = false, Message = "User session expired.", Status = "Error" });
-            }
-
-            var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
-            {
-                return BadRequest(new Response { IsSuccess = false, Message = "User not found.", Status = "Error" });
-            }
+                return BadRequest("Invalid OTP");
 
-            if (storedOtp != otp)
-            {
-                return BadRequest(new Response { IsSuccess = false, Message = "Invalid OTP.", Status = "Error" });
-            }
+            // Check if OTP is expired
+            if (user.OtpExpiration < DateTime.UtcNow)
+                return BadRequest("OTP has expired");
 
-            HttpContext.Session.SetString("ResetPasswordUserId", user.Id);
+            // Mark OTP as verified in the database
+            user.OtpVerified = true;
+            await _userManager.UpdateAsync(user);
 
-            return Ok(new Response { IsSuccess = true, Message = "OTP verified successfully.", Status = "Success" });
+            return Ok("OTP verified successfully");
         }
 
         [HttpPost("ResetPassword")]
         [AllowAnonymous]
-        public async Task<IActionResult> ResetPassword([FromForm] ResetPassword resetPasswordRequest)
+        public async Task<IActionResult> ResetPassword([FromForm] ResetPassword request)
         {
-            // Retrieve the UserId from the session
-            var userId = HttpContext.Session.GetString("ResetPasswordUserId");
-            if (string.IsNullOrEmpty(userId))
+            if (!ModelState.IsValid)
             {
-                return BadRequest(new Response { IsSuccess = false, Message = "User session expired.", Status = "Error" });
+                return BadRequest(ModelState);
             }
 
-            
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.OtpVerified == true);
+
             if (user == null)
             {
-                return BadRequest(new Response { IsSuccess = false, Message = "User not found.", Status = "Error" });
+                return BadRequest(new { message = "OTP verification required" });
             }
 
-           
-            if (resetPasswordRequest.NewPassword != resetPasswordRequest.ConfirmNewPassword)
-            {
-                return BadRequest(new Response { IsSuccess = false, Message = "Passwords do not match.", Status = "Error" });
-            }
+            // Generate reset token
+            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, resetToken, request.NewPassword);
 
-           
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-
-            
-            var result = await _userManager.ResetPasswordAsync(user, token, resetPasswordRequest.NewPassword);
             if (!result.Succeeded)
             {
-                return BadRequest(new Response
-                {
-                    IsSuccess = false,
-                    Message = "Password reset failed.",
-                    Status = "Error"
-                   
-                });
+                return BadRequest(result.Errors);
             }
 
-            // Clear the session after successful password reset
-            HttpContext.Session.Remove("ResetPasswordUserId");
+            // Clear OTP-related fields
+            user.ResetOtp = null;
+            user.OtpExpiration = null;
+            user.OtpVerified = false;
+            await _userManager.UpdateAsync(user);
 
-            return Ok(new Response
-            {
-                IsSuccess = true,
-                Message = "Password reset successfully.",
-                Status = "Success"
-            });
+            return Ok(new { message = "Password reset successfully" });
         }
-
-     
 
 
 

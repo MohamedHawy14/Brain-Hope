@@ -34,5 +34,10 @@ namespace BrainHope.DataAcess.Models
 
         //chat
         public ICollection<UserConnection> UserConnections { get; set; }
+
+        //otp
+        public string? ResetOtp { get; set; }
+        public DateTime? OtpExpiration { get; set; }
+        public bool OtpVerified { get; set; }
     }
 }

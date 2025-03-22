@@ -104,9 +104,10 @@ namespace BrainHope_.Api
                 options.AddPolicy(MyAllowSpecificOrigins,
                     policy =>
                     {
-                        policy.AllowAnyOrigin() 
-                              .AllowAnyMethod()  
-                              .AllowAnyHeader(); 
+                        policy.AllowAnyOrigin()
+                              .AllowAnyMethod()
+                              .AllowAnyHeader()
+                              .WithExposedHeaders("Set-Cookie");
                     });
             });
 
@@ -171,6 +172,7 @@ namespace BrainHope_.Api
             app.UseHttpsRedirection();
             app.UseCors(MyAllowSpecificOrigins);
             app.UseAuthentication();
+            app.UseSession();
             app.UseAuthorization();
             app.MapHub<ChatHub>("/chathub");
             app.MapHub<PostHub>("/postHub");
@@ -180,7 +182,7 @@ namespace BrainHope_.Api
                 options.RoutePrefix = string.Empty; 
             });
 
-            app.UseSession();
+           
 
             app.MapControllers();
 
