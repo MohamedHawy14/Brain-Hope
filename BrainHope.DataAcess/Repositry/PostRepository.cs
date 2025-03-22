@@ -21,42 +21,86 @@ namespace BrainHope.DataAcess.Repositry
 
         public async Task<IEnumerable<Post>> GetAllPostsAsync()
         {
-            return await _context.Posts
-                .Include(p => p.Doctor) // Include Doctor details
-                .OrderByDescending(p => p.CreatedAt)
-                .ToListAsync();
+            return await _context.Posts.Include(p => p.Likes)
+                                       .Include(p => p.Comments)
+                                       .ToListAsync();
         }
 
-        public async Task<Post> GetPostByIdAsync(int id)
+        public async Task<Post> GetPostByIdAsync(int postId)
         {
-            return await _context.Posts
-                .Include(p => p.Doctor)
-                .FirstOrDefaultAsync(p => p.Id == id);
+            return await _context.Posts.Include(p => p.Likes)
+                                       .Include(p => p.Comments)
+                                       .FirstOrDefaultAsync(p => p.Id == postId);
         }
 
-        public async Task<Post> CreatePostAsync(Post post)
+        public async Task AddPostAsync(Post post)
         {
-            _context.Posts.Add(post);
-            await _context.SaveChangesAsync();
-            return post;
+            await _context.Posts.AddAsync(post);
         }
 
-        public async Task<Post> UpdatePostAsync(Post post)
+        public void UpdatePost(Post post)
         {
             _context.Posts.Update(post);
-            await _context.SaveChangesAsync();
-            return post;
         }
 
-        public async Task<bool> DeletePostAsync(int id)
+        public async Task DeletePost(Post post)
         {
-            var post = await _context.Posts.FindAsync(id);
-            if (post == null) return false;
-
             _context.Posts.Remove(post);
-            await _context.SaveChangesAsync();
-            return true;
+            await Task.CompletedTask; // If needed, replace with actual async DB operation
         }
+
+        public async Task RemoveComment(int commentId)
+        {
+            var comment = await _context.Comments.FindAsync(commentId);
+            if (comment != null)
+            {
+                _context.Comments.Remove(comment);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task AddLike(int postId, string userId)
+        {
+            var like = new PostLike { PostId = postId, UserId = userId };
+            await _context.Likes.AddAsync(like);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> GetLikeAsync(int postId, string userId)
+        {
+            return await _context.Likes.AnyAsync(like => like.PostId == postId && like.UserId == userId);
+        }
+
+
+        public async Task RemoveLike(int postId, string userId)
+        {
+            var like = await _context.Likes.FirstOrDefaultAsync(l => l.PostId == postId && l.UserId == userId);
+            if (like != null)
+            {
+                _context.Likes.Remove(like);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task AddComment(Comment comment)
+        {
+            await _context.Comments.AddAsync(comment);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateComment(Comment comment)
+        {
+            _context.Comments.Update(comment);
+            await _context.SaveChangesAsync();
+        }
+
+
+        public async Task<Comment> GetCommentByIdAsync(int commentId)
+        {
+            return await _context.Comments.FindAsync(commentId);
+        }
+
     }
+
 
 }

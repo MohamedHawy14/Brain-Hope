@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,10 +6,15 @@ using System.Threading.Tasks;
 
 namespace BrainHope.Services.DTO.Posts
 {
-    public class PostDTO
-    { 
+    public class PostDto
+    {
+        public int Id { get; set; }
+        public string DoctorId { get; set; }
         public string Title { get; set; }
-        public string? Content { get; set; }
-        public IFormFile? ImageUrl { get; set; } 
+        public string Content { get; set; }
+        public string? ImageUrl { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public int LikesCount { get; set; }
+        public int CommentsCount { get; set; }
     }
 }

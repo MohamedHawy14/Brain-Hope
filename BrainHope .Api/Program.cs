@@ -15,6 +15,8 @@ using System.Text;
 using BrainHope.Services.Hubs;
 using Microsoft.AspNetCore.HttpOverrides;
 using Utilites;
+using Microsoft.Extensions.Configuration;
+using System;
 
 namespace BrainHope_.Api
 {
@@ -23,9 +25,14 @@ namespace BrainHope_.Api
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            //Services
+
+            builder.Services.AddScoped<IPostService, PostService>();
 
             //For Entity FrameWork
-            builder.Services.AddDbContext<BrainHopeDbContext>(options => { options.UseSqlServer(builder.Configuration.GetConnectionString("cs")); });
+            builder.Services.AddDbContext<BrainHopeDbContext>(options =>
+            options.UseSqlServer(builder.Configuration.GetConnectionString("cs")),
+            ServiceLifetime.Scoped);
 
             //For Identity
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<BrainHopeDbContext>().AddDefaultTokenProviders();

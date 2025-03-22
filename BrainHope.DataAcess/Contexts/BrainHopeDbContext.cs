@@ -28,6 +28,8 @@ namespace BrainHope.DataAcess.Contexts
         public DbSet<ChatMessage> ChatMessages { get; set; }
 
         public DbSet<Post> Posts { get; set; }
+        public DbSet<PostLike> Likes { get; set; }
+        public DbSet<Comment> Comments { get; set; }
         public BrainHopeDbContext(DbContextOptions<BrainHopeDbContext> options):base(options)
         {
             

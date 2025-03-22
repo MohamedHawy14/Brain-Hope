@@ -10,15 +10,17 @@ namespace BrainHope.DataAcess.Models.Posts
     public class Post
     {
         public int Id { get; set; }
-        public string DoctorId { get; set; } // FK to AspNetUsers
+        public string DoctorId { get; set; } // Only doctors can create posts
         public string Title { get; set; }
         public string Content { get; set; }
-        public string? ImageUrl { get; set; } // Optional image
+        public string? ImageUrl { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime? UpdatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
 
-        [ForeignKey("DoctorId")]
-        public virtual ApplicationUser Doctor { get; set; } // Relationship with Users
+        public virtual ApplicationUser Doctor { get; set; }
+        public virtual ICollection<PostLike> Likes { get; set; } = new List<PostLike>();
+        public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
     }
+
 
 }
