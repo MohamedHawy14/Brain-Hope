@@ -45,7 +45,7 @@ namespace Utilites
             }
 
             // Return full URL instead of just the path
-            string baseUrl = "https://braincancer.runasp.net";  // Change this to your domain
+            string baseUrl = "http://braincancer.runasp.net";  // Change this to your domain
             return $"{baseUrl}/uploads/{uniqueFileName}";
         }
 

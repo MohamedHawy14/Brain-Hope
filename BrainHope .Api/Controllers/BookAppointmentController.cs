@@ -19,27 +19,22 @@ namespace BrainHope_.Api.Controllers
         }
 
         [HttpGet("GetAllDoctors")]
-        public async Task<IActionResult> GetAllDoctors(string? name = null)
+        public async Task<IActionResult> GetAllDoctors()
         {
             var query = unitOfWork.Repository<Doctor>()
                 .GetAllQuery(includeProperties: "AppUser")
                 .AsQueryable();
 
-            if (!string.IsNullOrEmpty(name))
-            {
-                query = query.Where(d => d.AppUser.UserName.Contains(name)); // Search by Name
-            }
+           
 
             var doctors = await query
-                .OrderBy(d => d.Rate)
+                .OrderByDescending(d => d.Rate)
                 .Select(d => new AllDoctorDTO
                 {
                     Name = d.AppUser.UserName,
                     Description = d.AppUser.Description,
                     Rate = d.Rate,
-                    ProfilePhoto = string.IsNullOrEmpty(d.AppUser.ProfilePhoto)
-                    ? null
-                    : $"{Request.Scheme}://{Request.Host}{d.AppUser.ProfilePhoto}"
+                    ProfilePhoto = d.AppUser.ProfilePhoto
                 })
                 .ToListAsync(); 
 
@@ -68,9 +63,7 @@ namespace BrainHope_.Api.Controllers
                 Name = doctor.AppUser.UserName,
                 Description = doctor.AppUser.Description,
                 Address = doctor.AppUser.Address,
-                ProfilePhoto = string.IsNullOrEmpty(doctor.AppUser.ProfilePhoto)
-              ? null
-              : $"{Request.Scheme}://{Request.Host}{doctor.AppUser.ProfilePhoto}" 
+                ProfilePhoto = doctor.AppUser.ProfilePhoto
             };
 
             return Ok(doctorDto);
