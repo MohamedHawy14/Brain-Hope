@@ -1,6 +1,7 @@
 ﻿using BrainHope.DataAcess.Models;
 using BrainHope.DataAcess.Repositry.IRepository;
 using BrainHope.Services.DTO.Profile;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +11,7 @@ namespace BrainHope_.Api.Controllers
 {
     [Route("profile/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProfileController : ControllerBase
     {
        

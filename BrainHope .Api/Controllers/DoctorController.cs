@@ -1,13 +1,16 @@
 ﻿using BrainHope.DataAcess.Models;
 using BrainHope.DataAcess.Repositry.IRepository;
 using BrainHope.Services.DTO.Doctor;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Utilites;
 
 namespace BrainHope_.Api.Controllers
 {
     [Route("doctor/[controller]")]
     [ApiController]
+    [Authorize(Roles = SD.Role_Doctor)]
     public class DoctorController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;

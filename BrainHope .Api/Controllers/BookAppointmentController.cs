@@ -1,14 +1,17 @@
 ﻿using BrainHope.DataAcess.Models;
 using BrainHope.DataAcess.Repositry.IRepository;
 using BrainHope.Services.DTO.BookAppointment;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Utilites;
 
 namespace BrainHope_.Api.Controllers
 {
     [Route("Appointment/[controller]")]
     [ApiController]
+    [Authorize(Roles = SD.Role_Patient)]
     public class BookAppointmentController : ControllerBase
     {
         private readonly IUnitOfWork unitOfWork;
@@ -70,10 +73,10 @@ namespace BrainHope_.Api.Controllers
         }
 
 
-        [HttpGet("GetDoctorCalendlyLink/{doctorId}")]
-        public async Task<IActionResult> GetDoctorCalendlyLink(int doctorId)
+        [HttpGet("GetDoctorCalendlyLink/{doctorUserId}")]
+        public async Task<IActionResult> GetDoctorCalendlyLink(string doctorId)
         {
-            var doctor = unitOfWork.Repository<Doctor>().Get(d => d.Id == doctorId);
+            var doctor = unitOfWork.Repository<Doctor>().Get(d => d.AppUser.Id == doctorId,includeProperties:"AppUser");
 
             if (doctor == null)
             {

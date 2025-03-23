@@ -2,6 +2,7 @@
 using BrainHope.DataAcess.Models.Chat;
 using BrainHope.DataAcess.Repositry.IRepository;
 using BrainHope.Services.DTO.Chat;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -13,6 +14,7 @@ namespace BrainHope_.Api.Controllers
 {
     [Route("Chat/[controller]")]
     [ApiController]
+    [Authorize]
     public class ChatController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
