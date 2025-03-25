@@ -14,7 +14,7 @@ namespace BrainHope_.Api.Controllers
 {
     [Route("Chat/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class ChatController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;

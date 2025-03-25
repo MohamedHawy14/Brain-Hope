@@ -1,6 +1,7 @@
 ﻿using BrainHope.DataAcess.Models;
 using BrainHope.Services.DTO;
 using BrainHope.Services.DTO.Admin;
+using BrainHope.Services.DTO.Authentication.SingUp;
 using BrainHope.Services.DTO.Email;
 using BrainHope.Services.InterFaces;
 using BrainHope.Services.Services;
@@ -15,7 +16,7 @@ namespace BrainHope_.Api.Controllers
 {
     [Route("Admin/[controller]")]
     [ApiController]
-   [Authorize(Roles =SD.Role_Admin)]
+  // [Authorize(Roles =SD.Role_Admin)]
     public class AdminController : ControllerBase
     {
 
@@ -56,14 +57,34 @@ namespace BrainHope_.Api.Controllers
                     new Response { Message = tokenResponse.Message, IsSuccess = false });
             }
 
-            // Assign roles and create user entry in Doctor or Patient tables
+            
             await _authServices.AssignRoleToUserAsync(createUser.Roles, tokenResponse.Response.User);
 
             // Generate email confirmation link
             var confirmationLink = Url.Action(nameof(ConfirmEmail), "Account",
                 new { token = tokenResponse.Response.Token, email = createUser.Email }, Request.Scheme);
 
-            var message = new Message(new string[] { createUser.Email! }, "Confirmation Email Link", confirmationLink!);
+            #region Email Message
+            var message = new Message(
+                new string[] { createUser.Email! },
+                "Confirm Your Email",
+                $@"
+        <html>
+        <body>
+            <p>Hello {createUser.UserName},</p>
+            <p>Thank you for registering. Please confirm your email by clicking the button below:</p>
+            <p>
+                <a href='{confirmationLink}' 
+                   style='display: inline-block; padding: 10px 20px; font-size: 16px; color: white; 
+                          background-color: #007bff; text-decoration: none; border-radius: 5px;'>
+                    Confirm Email
+                </a>
+            </p>
+            <p>Best regards,<br>BrainHope Team</p>
+        </body>
+        </html>"
+            );
+            #endregion
             _emailService.SendEmail(message);
 
             return Ok(new Response

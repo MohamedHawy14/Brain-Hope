@@ -12,7 +12,7 @@ namespace BrainHope_.Api.Controllers
 {
     [Route("comment/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class CommentController : ControllerBase
     {
         private readonly IPostService _postService;

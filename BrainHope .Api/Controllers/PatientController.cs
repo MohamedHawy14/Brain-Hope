@@ -10,7 +10,7 @@ namespace BrainHope_.Api.Controllers
 {
     [Route("patient/[controller]")]
     [ApiController]
-    [Authorize(Roles = SD.Role_Patient)]
+    //[Authorize(Roles = SD.Role_Patient)]
     public class PatientController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;

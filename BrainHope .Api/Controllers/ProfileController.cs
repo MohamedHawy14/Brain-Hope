@@ -11,7 +11,7 @@ namespace BrainHope_.Api.Controllers
 {
     [Route("profile/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class ProfileController : ControllerBase
     {
        

@@ -11,7 +11,7 @@ namespace BrainHope_.Api.Controllers
 {
     [Route("Appointment/[controller]")]
     [ApiController]
-    [Authorize(Roles = SD.Role_Patient)]
+    //[Authorize(Roles = SD.Role_Patient)]
     public class BookAppointmentController : ControllerBase
     {
         private readonly IUnitOfWork unitOfWork;
@@ -66,17 +66,23 @@ namespace BrainHope_.Api.Controllers
                 Name = doctor.AppUser.UserName,
                 Description = doctor.AppUser.Description,
                 Address = doctor.AppUser.Address,
-                ProfilePhoto = doctor.AppUser.ProfilePhoto
+                ProfilePhoto = doctor.AppUser.ProfilePhoto,
+                CalendlyLink = !string.IsNullOrEmpty(doctor.CalendlyLink)  ? doctor.CalendlyLink : "No Calendly link available"
             };
 
             return Ok(doctorDto);
         }
 
-
-        [HttpGet("GetDoctorCalendlyLink/{doctorUserId}")]
-        public async Task<IActionResult> GetDoctorCalendlyLink(string doctorId)
+        [HttpGet("GetDoctorCalendlyLink/{userId}")]
+        public async Task<IActionResult> GetDoctorCalendlyLink(string userId)
         {
-            var doctor = unitOfWork.Repository<Doctor>().Get(d => d.AppUser.Id == doctorId,includeProperties:"AppUser");
+            if (string.IsNullOrEmpty(userId))
+            {
+                return BadRequest("User ID is required.");
+            }
+
+            var doctor = unitOfWork.Repository<Doctor>()
+                            .Get(d => d.UserId == userId, includeProperties: "AppUser");
 
             if (doctor == null)
             {
@@ -90,6 +96,7 @@ namespace BrainHope_.Api.Controllers
 
             return Ok(new { calendlyLink = doctor.CalendlyLink });
         }
+
 
 
 

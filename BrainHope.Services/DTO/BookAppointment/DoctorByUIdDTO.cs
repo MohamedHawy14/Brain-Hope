@@ -12,5 +12,6 @@ namespace BrainHope.Services.DTO.BookAppointment
         public string Description { get; set; }
         public string Address { get; set; }
         public string ProfilePhoto { get; set; }
+        public string? CalendlyLink { get; set; }
     }
 }

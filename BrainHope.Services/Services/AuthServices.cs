@@ -49,7 +49,7 @@ namespace BrainHope.Services.Services
             this._context = context;
         }
 
-       
+
         public async Task<ApiResponse<CreateUserResponse>> CreateUserWithTokenAdminAsync(CreateUser createUser)
         {
             var response = new ApiResponse<CreateUserResponse>();
@@ -62,6 +62,7 @@ namespace BrainHope.Services.Services
                 response.Message = "User with this email already exists.";
                 return response;
             }
+
             var existingUser2 = await _userManager.FindByNameAsync(createUser.UserName);
             if (existingUser2 != null)
             {
@@ -69,6 +70,7 @@ namespace BrainHope.Services.Services
                 response.Message = "User with this UserName already exists.";
                 return response;
             }
+
             var existUserByNationalId = await _userManager.Users
                 .FirstOrDefaultAsync(u => u.NationalId == createUser.NationalId);
             if (existUserByNationalId != null)
@@ -77,14 +79,13 @@ namespace BrainHope.Services.Services
                 response.Message = "User with this National Id already exists.";
                 return response;
             }
+
             // Save profile photo and get the path
             string? profilePhotoPath = null;
             if (createUser.ProfilePhoto != null)
             {
                 profilePhotoPath = await ImageHelper.SaveImageAsync(createUser.ProfilePhoto);
             }
-
-
 
             // Create a new ApplicationUser object
             var user = new ApplicationUser
@@ -94,7 +95,7 @@ namespace BrainHope.Services.Services
                 NationalId = createUser.NationalId,
                 SecurityStamp = Guid.NewGuid().ToString(),
                 TwoFactorEnabled = true,
-                ProfilePhoto = profilePhotoPath  // Save profile photo to database
+                ProfilePhoto = profilePhotoPath
             };
 
             // Create user in Identity
@@ -106,45 +107,35 @@ namespace BrainHope.Services.Services
                 return response;
             }
 
-
-
             // Assign roles to the user
             await AssignRoleToUserAsync(createUser.Roles, user);
 
-            // Handle role-specific logic
-            if (createUser.Roles.Contains(SD.Role_Doctor))
+            // **Handle multiple role assignments dynamically**
+            foreach (var role in createUser.Roles)
             {
-                var doctor = new Doctor
+                switch (role)
                 {
-                    UserId = user.Id
-                };
-                _context.Doctors.Add(doctor);
-            }
-            else if (createUser.Roles.Contains(SD.Role_Patient))
-            {
-                var patient = new Patient
-                {
-                    UserId = user.Id
-                };
-                _context.Patients.Add(patient);
-            }
-            else
-            {
-                var admin = new Admin
-                {
-                    UserId = user.Id
-                };
-                _context.Admins.Add(admin);
+                    case SD.Role_Doctor:
+                        _context.Doctors.Add(new Doctor { UserId = user.Id });
+                        break;
 
+                    case SD.Role_Patient:
+                        _context.Patients.Add(new Patient { UserId = user.Id });
+                        break;
+
+                    case SD.Role_Admin:
+                        _context.Admins.Add(new Admin { UserId = user.Id });
+                        break;
+                }
             }
 
             await _context.SaveChangesAsync();
 
-            // Generate a token for the user
+            // Generate an email confirmation token
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
             response.IsSuccess = true;
-            response.Message = "User created successfully. Please confirm your email (=>Spam If needed).";
+            response.Message = "User created successfully. Please confirm your email.";
             response.Response = new CreateUserResponse
             {
                 User = user,
@@ -155,7 +146,6 @@ namespace BrainHope.Services.Services
         }
 
 
-       
         public async Task<ApiResponse<CreateUserResponse>> CreateUserWithTokenAsync(RegisterUser registerUser, string? profilePhotoPath)
         {
             // Check if the user already exists
