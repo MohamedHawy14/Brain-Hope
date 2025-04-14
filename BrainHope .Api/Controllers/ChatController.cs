@@ -68,20 +68,22 @@ namespace BrainHope_.Api.Controllers
         }
 
         [HttpGet("history/{userid1}/{userid2}")]
-        public async Task<IActionResult> GetChatHistory(string user1, string user2)
+        public async Task<IActionResult> GetChatHistory([FromRoute] string userid1, [FromRoute] string userid2)
         {
-            var messages = await _unitOfWork.ChatRepository.GetChatHistory(user1, user2);
+            var messages = await _unitOfWork.ChatRepository.GetChatHistory(userid1, userid2);
+
             var dtoList = messages.Select(m => new
             {
                 senderId = m.SenderId,
                 receiverId = m.ReceiverId,
                 message = m.Message,
                 time = m.Time,
-                image = m.Image,
-               
+                image = m.Image
             });
+
             return Ok(dtoList);
         }
+
 
         [HttpPut("read/{senderId}/{receiverId}")]
         public async Task<IActionResult> MarkMessagesAsRead(string senderId, string receiverId)
@@ -107,7 +109,7 @@ namespace BrainHope_.Api.Controllers
             var contactGroups = messages.GroupBy(m => m.SenderId == userId ? m.ReceiverId : m.SenderId).ToList();
             var contactIds = contactGroups.Select(g => g.Key).Distinct().ToList();
 
-            string baseUrl = "https://braincancer.runasp.net"; // Change this to your domain
+           
 
             var users = await _userManager.Users
                 .Where(u => contactIds.Contains(u.Id))
@@ -115,7 +117,7 @@ namespace BrainHope_.Api.Controllers
                 {
                     u.Id,
                     u.UserName,
-                    ProfilePhoto = !string.IsNullOrEmpty(u.ProfilePhoto) ? $"{baseUrl}{u.ProfilePhoto}" : null
+                    ProfilePhoto = u.ProfilePhoto
                 })
                 .ToListAsync();
 

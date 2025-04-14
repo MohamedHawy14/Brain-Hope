@@ -34,6 +34,7 @@ namespace BrainHope_.Api.Controllers
                 .OrderByDescending(d => d.Rate)
                 .Select(d => new AllDoctorDTO
                 {
+                    Id=d.AppUser.Id,
                     Name = d.AppUser.UserName,
                     Description = d.AppUser.Description,
                     Rate = d.Rate,
@@ -63,11 +64,13 @@ namespace BrainHope_.Api.Controllers
 
             var doctorDto = new DoctorByUIdDTO
             {
+                Id=doctor.AppUser.Id,
                 Name = doctor.AppUser.UserName,
                 Description = doctor.AppUser.Description,
                 Address = doctor.AppUser.Address,
                 ProfilePhoto = doctor.AppUser.ProfilePhoto,
-                CalendlyLink = !string.IsNullOrEmpty(doctor.CalendlyLink)  ? doctor.CalendlyLink : "No Calendly link available"
+                CalendlyLink = !string.IsNullOrEmpty(doctor.CalendlyLink)  ? doctor.CalendlyLink : "No Calendly link available",
+                PhoneNumber=doctor.AppUser.PhoneNumber
             };
 
             return Ok(doctorDto);

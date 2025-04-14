@@ -78,14 +78,14 @@ namespace BrainHope_.Api.Controllers
                 return NotFound("User not found.");
             }
 
-            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+           
 
 
             var profileDTO = new UserProfileDTO
             {
                 UserName = user.UserName,
                 Email = user.Email,
-                ProfilePhoto = string.IsNullOrEmpty(user.ProfilePhoto) ? null : $"{baseUrl}{user.ProfilePhoto}",
+                ProfilePhoto = user.ProfilePhoto,
                 Bio = user.Description,
                 Address = user.Address,
                 PhoneNumber = user.PhoneNumber
@@ -103,12 +103,12 @@ namespace BrainHope_.Api.Controllers
                 return NotFound("User not found.");
             }
 
-            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+           
 
             var profileDTO = new UpdateProfileGetDTO
             {
                 UserName = user.UserName,
-                ProfilePhoto = string.IsNullOrEmpty(user.ProfilePhoto) ? null : $"{baseUrl}{user.ProfilePhoto}",
+                ProfilePhoto = user.ProfilePhoto,
                 Bio = user.Description,
                 Address = user.Address,
                 PhoneNumber = user.PhoneNumber
@@ -169,13 +169,13 @@ namespace BrainHope_.Api.Controllers
                 return StatusCode(500, new { message = "Profile update failed.", errors });
             }
 
-            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            
 
             var updatedProfile = new UserProfileDTO
             {
                 UserName = user.UserName,
                 Email = user.Email,
-                ProfilePhoto = string.IsNullOrEmpty(user.ProfilePhoto) ? null : $"{baseUrl}{user.ProfilePhoto}",
+                ProfilePhoto = user.ProfilePhoto,
                 Bio = user.Description,
                 Address = user.Address,
                 PhoneNumber = user.PhoneNumber

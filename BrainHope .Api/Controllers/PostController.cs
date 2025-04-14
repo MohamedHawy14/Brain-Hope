@@ -14,7 +14,7 @@ using BrainHope.Services.InterFaces;
 
 namespace BrainHope_.Api.Controllers
 {
-    [Authorize]
+    //[Authorize]
     [ApiController]
     [Route("post/[controller]")]
     public class PostController : ControllerBase
@@ -46,7 +46,7 @@ namespace BrainHope_.Api.Controllers
             return Ok(post);
         }
 
-        [Authorize(Roles = SD.Role_Doctor)]
+        //[Authorize(Roles = SD.Role_Doctor)]
         [HttpPost("Create")]
         public async Task<IActionResult> CreatePost([FromForm] CreatePostDto dto)
         {
@@ -61,7 +61,7 @@ namespace BrainHope_.Api.Controllers
 
 
 
-        [Authorize(Roles = SD.Role_Doctor)]
+        //[Authorize(Roles = SD.Role_Doctor)]
         [HttpPut("Update/{id}")]
         public async Task<IActionResult> UpdatePost(int id, [FromForm] UpdatePostDto dto)
         {
@@ -75,7 +75,7 @@ namespace BrainHope_.Api.Controllers
 
 
 
-        [Authorize(Roles = SD.Role_Doctor)]
+        //[Authorize(Roles = SD.Role_Doctor)]
         [HttpDelete("Delete/{id}")]
         public async Task<IActionResult> DeletePost(int id)
         {
