@@ -4,6 +4,7 @@ using BrainHope.DataAcess.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BrainHope.DataAcess.Migrations
 {
     [DbContext(typeof(BrainHopeDbContext))]
-    partial class BrainHopeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250417171245_UpdateNoteInMedicalHistory")]
+    partial class UpdateNoteInMedicalHistory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -277,6 +280,7 @@ namespace BrainHope.DataAcess.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PatientId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Surgeries")
@@ -607,7 +611,9 @@ namespace BrainHope.DataAcess.Migrations
                 {
                     b.HasOne("BrainHope.DataAcess.Models.ApplicationUser", "Patient")
                         .WithMany()
-                        .HasForeignKey("PatientId");
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Patient");
                 });

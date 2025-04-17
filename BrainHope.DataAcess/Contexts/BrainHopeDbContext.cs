@@ -22,7 +22,10 @@ namespace BrainHope.DataAcess.Contexts
         public DbSet<Admin> Admins { get; set; }
         public DbSet<DoctorPatient> DoctorPatients { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
-       // public DbSet<Appointment> Appointments { get; set; }
+        public DbSet<MedicalHistory> MedicalHistories { get; set; }
+
+
+        // public DbSet<Appointment> Appointments { get; set; }
 
         public DbSet<UserConnection> UserConnections { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
@@ -107,7 +110,14 @@ namespace BrainHope.DataAcess.Contexts
                 .OnDelete(DeleteBehavior.Restrict); // Prevent cascading delete
 
 
-            SeedRoles(builder);
+            //medical history with patient ya fannnnan
+            builder.Entity<MedicalHistory>()
+                .HasOne(h => h.Patient)
+                .WithMany()
+                .HasForeignKey(h => h.PatientId);
+
+
+            //SeedRoles(builder);
         }
 
         private static void SeedRoles(ModelBuilder builder)
