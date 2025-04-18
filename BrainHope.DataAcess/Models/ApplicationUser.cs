@@ -1,4 +1,5 @@
-﻿using BrainHope.DataAcess.Models.Chat;
+﻿using BrainHope.DataAcess.Models.AiModel;
+using BrainHope.DataAcess.Models.Chat;
 using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
@@ -39,5 +40,8 @@ namespace BrainHope.DataAcess.Models
         public string? ResetOtp { get; set; }
         public DateTime? OtpExpiration { get; set; }
         public bool OtpVerified { get; set; }
+
+        //Scan Result
+        public ICollection<BrainScanResult> BrainScanResults { get; set; } = new List<BrainScanResult>();
     }
 }

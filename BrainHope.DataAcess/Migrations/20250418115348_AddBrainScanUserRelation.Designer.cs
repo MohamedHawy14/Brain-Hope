@@ -4,6 +4,7 @@ using BrainHope.DataAcess.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BrainHope.DataAcess.Migrations
 {
     [DbContext(typeof(BrainHopeDbContext))]
-    partial class BrainHopeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250418115348_AddBrainScanUserRelation")]
+    partial class AddBrainScanUserRelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -39,7 +42,7 @@ namespace BrainHope.DataAcess.Migrations
                         .IsUnique()
                         .HasFilter("[UserId] IS NOT NULL");
 
-                    b.ToTable("Admins", (string)null);
+                    b.ToTable("Admins");
                 });
 
             modelBuilder.Entity("BrainHope.DataAcess.Models.AiModel.BrainScanResult", b =>
@@ -69,7 +72,7 @@ namespace BrainHope.DataAcess.Migrations
 
                     b.HasIndex("PatientId");
 
-                    b.ToTable("BrainScanResults", (string)null);
+                    b.ToTable("BrainScanResults");
                 });
 
             modelBuilder.Entity("BrainHope.DataAcess.Models.ApplicationUser", b =>
@@ -203,7 +206,7 @@ namespace BrainHope.DataAcess.Migrations
 
                     b.HasIndex("SenderId");
 
-                    b.ToTable("ChatMessages", (string)null);
+                    b.ToTable("ChatMessages");
                 });
 
             modelBuilder.Entity("BrainHope.DataAcess.Models.Chat.UserConnection", b =>
@@ -226,7 +229,7 @@ namespace BrainHope.DataAcess.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserConnections", (string)null);
+                    b.ToTable("UserConnections");
                 });
 
             modelBuilder.Entity("BrainHope.DataAcess.Models.Doctor", b =>
@@ -252,7 +255,7 @@ namespace BrainHope.DataAcess.Migrations
                         .IsUnique()
                         .HasFilter("[UserId] IS NOT NULL");
 
-                    b.ToTable("Doctors", (string)null);
+                    b.ToTable("Doctors");
                 });
 
             modelBuilder.Entity("BrainHope.DataAcess.Models.DoctorPatient", b =>
@@ -267,7 +270,7 @@ namespace BrainHope.DataAcess.Migrations
 
                     b.HasIndex("PatientId");
 
-                    b.ToTable("DoctorPatients", (string)null);
+                    b.ToTable("DoctorPatients");
                 });
 
             modelBuilder.Entity("BrainHope.DataAcess.Models.MedicalHistory", b =>
@@ -317,7 +320,7 @@ namespace BrainHope.DataAcess.Migrations
 
                     b.HasIndex("PatientId");
 
-                    b.ToTable("MedicalHistories", (string)null);
+                    b.ToTable("MedicalHistories");
                 });
 
             modelBuilder.Entity("BrainHope.DataAcess.Models.Patient", b =>
@@ -337,7 +340,7 @@ namespace BrainHope.DataAcess.Migrations
                         .IsUnique()
                         .HasFilter("[UserId] IS NOT NULL");
 
-                    b.ToTable("Patients", (string)null);
+                    b.ToTable("Patients");
                 });
 
             modelBuilder.Entity("BrainHope.DataAcess.Models.Posts.Comment", b =>
@@ -368,7 +371,7 @@ namespace BrainHope.DataAcess.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Comments", (string)null);
+                    b.ToTable("Comments");
                 });
 
             modelBuilder.Entity("BrainHope.DataAcess.Models.Posts.Post", b =>
@@ -404,7 +407,7 @@ namespace BrainHope.DataAcess.Migrations
 
                     b.HasIndex("DoctorId");
 
-                    b.ToTable("Posts", (string)null);
+                    b.ToTable("Posts");
                 });
 
             modelBuilder.Entity("BrainHope.DataAcess.Models.Posts.PostLike", b =>
@@ -428,7 +431,7 @@ namespace BrainHope.DataAcess.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Likes", (string)null);
+                    b.ToTable("Likes");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

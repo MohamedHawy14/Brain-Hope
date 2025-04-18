@@ -16,6 +16,7 @@ namespace BrainHope.DataAcess.Repositry
         private readonly BrainHopeDbContext _dbcontext;
         public IChatRepository ChatRepository { get; private set; }
         public IPostRepository PostRepository { get; private set; }
+        public IApplicationUserRepository ApplicationUserRepository { get; private set; }
 
         private Hashtable _repsitories;
         public UnitOfWork(BrainHopeDbContext dbcontext)
@@ -24,6 +25,7 @@ namespace BrainHope.DataAcess.Repositry
             _repsitories = new Hashtable();
             ChatRepository = new ChatRepository(_dbcontext);
             PostRepository = new PostRepository(_dbcontext);
+            ApplicationUserRepository = new ApplicationUserRepository(_dbcontext);
         }
         public Repository<T> Repository<T>() where T : ModelBase
         {

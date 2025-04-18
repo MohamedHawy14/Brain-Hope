@@ -15,5 +15,7 @@ namespace BrainHope.DataAcess.Repositry.IRepository
 
         IChatRepository ChatRepository { get; }
         IPostRepository PostRepository { get; }
+
+        IApplicationUserRepository ApplicationUserRepository { get; }
     }
 }

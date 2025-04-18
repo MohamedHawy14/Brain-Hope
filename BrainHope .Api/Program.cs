@@ -42,6 +42,7 @@ namespace BrainHope_.Api
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IChatRepository, ChatRepository>();
             builder.Services.AddScoped<IPostRepository, PostRepository>();
+            builder.Services.AddScoped<IApplicationUserRepository, ApplicationUserRepository>();
 
             //signalr
             builder.Services.AddSignalR();
@@ -57,7 +58,7 @@ namespace BrainHope_.Api
                 options.Cookie.IsEssential = true; 
             });
 
-
+            builder.Services.AddHttpClient();
 
 
             #region JWT

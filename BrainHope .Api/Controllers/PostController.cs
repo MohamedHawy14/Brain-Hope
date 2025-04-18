@@ -50,8 +50,12 @@ namespace BrainHope_.Api.Controllers
         [HttpPost("Create")]
         public async Task<IActionResult> CreatePost([FromForm] CreatePostDto dto)
         {
-            var doctorId = _userManager.GetUserId(User);
-            if (string.IsNullOrEmpty(doctorId)) return Unauthorized("User not authenticated.");
+            //var doctorId = _userManager.GetUserId(User);
+            //if (string.IsNullOrEmpty(doctorId)) return Unauthorized("User not authenticated.");
+
+            var doctorId = "35c3ff58-9db5-4b77-8570-7e630b16becc";
+
+
 
             var postDto = await _postService.CreatePost(dto, doctorId);
             if (postDto == null) return BadRequest("Failed to create post.");
@@ -65,8 +69,10 @@ namespace BrainHope_.Api.Controllers
         [HttpPut("Update/{id}")]
         public async Task<IActionResult> UpdatePost(int id, [FromForm] UpdatePostDto dto)
         {
-            var doctorId = _userManager.GetUserId(User);
-            if (string.IsNullOrEmpty(doctorId)) return Unauthorized("User not authenticated.");
+            //var doctorId = _userManager.GetUserId(User);
+            //if (string.IsNullOrEmpty(doctorId)) return Unauthorized("User not authenticated.");
+
+            var doctorId = "35c3ff58-9db5-4b77-8570-7e630b16becc";
 
             var updatedPost = await _postService.UpdatePost(id, dto, doctorId);
 
@@ -79,8 +85,9 @@ namespace BrainHope_.Api.Controllers
         [HttpDelete("Delete/{id}")]
         public async Task<IActionResult> DeletePost(int id)
         {
-            var doctorId = _userManager.GetUserId(User);
-            if (string.IsNullOrEmpty(doctorId)) return Unauthorized("User not authenticated.");
+            //var doctorId = _userManager.GetUserId(User);
+            //if (string.IsNullOrEmpty(doctorId)) return Unauthorized("User not authenticated.");
+            var doctorId = "35c3ff58-9db5-4b77-8570-7e630b16becc";
             var result = await _postService.DeletePost(id, doctorId);
             if (!result) return NotFound("Post not found or unauthorized.");
 

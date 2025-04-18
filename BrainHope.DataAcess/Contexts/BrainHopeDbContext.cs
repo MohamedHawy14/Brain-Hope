@@ -1,4 +1,5 @@
 ﻿using BrainHope.DataAcess.Models;
+using BrainHope.DataAcess.Models.AiModel;
 using BrainHope.DataAcess.Models.Chat;
 using BrainHope.DataAcess.Models.Posts;
 using Microsoft.AspNetCore.Identity;
@@ -23,6 +24,9 @@ namespace BrainHope.DataAcess.Contexts
         public DbSet<DoctorPatient> DoctorPatients { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
         public DbSet<MedicalHistory> MedicalHistories { get; set; }
+
+        public DbSet<BrainScanResult> BrainScanResults { get; set; }
+
 
 
         // public DbSet<Appointment> Appointments { get; set; }
