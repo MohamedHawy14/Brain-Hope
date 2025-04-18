@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Utilites;
+using Newtonsoft.Json;
 
 namespace BrainHope.Services.Services
 {
@@ -29,47 +30,66 @@ namespace BrainHope.Services.Services
             if (image == null || image.Length == 0)
                 throw new ArgumentException("No image uploaded.");
 
-            // 1. Save image locally and get URL
+            // Save image locally and get URL
             string imageUrl = await ImageHelper.SaveImageAsync(image);
 
-            // 2. Send image to AI model
+            // Send image to AI model
             using var stream = new MemoryStream();
             await image.CopyToAsync(stream);
             var imageBytes = stream.ToArray();
 
+            // Create HTTP client
             var client = _httpClientFactory.CreateClient();
             using var content = new MultipartFormDataContent();
-            content.Add(new ByteArrayContent(imageBytes), "file", image.FileName);
 
-            var response = await client.PostAsync("https://17a4-34-57-166-153.ngrok-free.app/predict", content);
+            // Prepare the file content
+            var fileContent = new ByteArrayContent(imageBytes);
+            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg"); // تأكد من نوع الصورة
+
+            // Add image content to form-data
+            content.Add(fileContent, "image", image.FileName);  // تأكد من تطابق "image" مع الحقل الذي يتوقعه الخادم
+
+            // Send POST request to Flask API
+            var response = await client.PostAsync("https://7f2b-34-80-201-155.ngrok-free.app/predict", content);
+
             if (!response.IsSuccessStatusCode)
-                throw new ApplicationException("Failed to get prediction from AI model.");
+            {
+                var errorDetails = await response.Content.ReadAsStringAsync();
+                throw new ApplicationException($"Failed to get prediction from AI model. Details: {errorDetails}");
+            }
 
+            // Read prediction result from the API
             var predictionResult = await response.Content.ReadAsStringAsync();
+            // Assuming the response is a JSON with 'prediction' and 'confidence'
+            var predictionData = JsonConvert.DeserializeObject<Dictionary<string, object>>(predictionResult);
+            var prediction = predictionData["prediction"].ToString();
+            var confidence = float.Parse(predictionData["confidence"].ToString());
 
-            // 3. Save to DB
+            // Save scan result to DB
             var scanResult = new BrainScanResult
             {
                 PatientId = userId,
                 ImageName = imageUrl,
-                PredictionResult = predictionResult,
+                PredictionResult = prediction,
                 ScanDate = DateTime.UtcNow
             };
 
             _unitOfWork.Repository<BrainScanResult>().Add(scanResult);
             await _unitOfWork.Complete();
 
-            // ✅ 4. Get patient info from ApplicationUserRepository
+            // Get patient info
             var patient = await _unitOfWork.ApplicationUserRepository.GetByIdAsync(userId);
             var patientName = patient?.UserName ?? "Unknown";
 
             return new BrainScanResultDTO
             {
                 ImageName = imageUrl,
-                PredictionResult = predictionResult,
+                PredictionResult = prediction,
                 PatientName = patientName
             };
         }
+
+
     }
 }
 

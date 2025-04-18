@@ -28,6 +28,7 @@ namespace BrainHope_.Api
             //Services
 
             builder.Services.AddScoped<IPostService, PostService>();
+            builder.Services.AddScoped<IBrainScanService, BrainScanService>();
 
             //For Entity FrameWork
             builder.Services.AddDbContext<BrainHopeDbContext>(options =>
