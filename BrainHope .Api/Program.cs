@@ -29,6 +29,8 @@ namespace BrainHope_.Api
 
             builder.Services.AddScoped<IPostService, PostService>();
             builder.Services.AddScoped<IBrainScanService, BrainScanService>();
+            builder.Services.AddScoped<IChatBotService, ChatBotService>();
+
 
             //For Entity FrameWork
             builder.Services.AddDbContext<BrainHopeDbContext>(options =>
@@ -59,7 +61,10 @@ namespace BrainHope_.Api
                 options.Cookie.IsEssential = true; 
             });
 
+            // ⁄‘«‰ ‰” œ⁄Ì «Ì Õ«ÃÂ ⁄‰œ‰«
+
             builder.Services.AddHttpClient();
+
 
 
             #region JWT

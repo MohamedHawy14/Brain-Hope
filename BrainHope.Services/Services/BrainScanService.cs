@@ -50,7 +50,7 @@ namespace BrainHope.Services.Services
             content.Add(fileContent, "image", image.FileName);  // تأكد من تطابق "image" مع الحقل الذي يتوقعه الخادم
 
             // Send POST request to Flask API
-            var response = await client.PostAsync("https://7f2b-34-80-201-155.ngrok-free.app/predict", content);
+            var response = await client.PostAsync("https://5824-34-91-220-19.ngrok-free.app/predict", content);
 
             if (!response.IsSuccessStatusCode)
             {

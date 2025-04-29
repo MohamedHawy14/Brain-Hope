@@ -28,8 +28,9 @@ namespace BrainHope_.Api.Controllers
         [HttpPost("AddComment")]
         public async Task<IActionResult> AddComment([FromForm] CommentDto dto)
         {
-            var userId = _userManager.GetUserId(User);
-            if (string.IsNullOrEmpty(userId)) return Unauthorized("User not authenticated.");
+            //var userId = _userManager.GetUserId(User);
+            //if (string.IsNullOrEmpty(userId)) return Unauthorized("User not authenticated.");
+            var userId = "35c3ff58-9db5-4b77-8570-7e630b16becc";
 
             await _postService.AddComment(dto, userId);
             return Ok("Comment added.");

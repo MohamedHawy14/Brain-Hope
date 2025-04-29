@@ -25,8 +25,9 @@ namespace BrainHope_.Api.Controllers
         [HttpPost("{postId}")]
         public async Task<IActionResult> LikePost(int postId)
         {
-            var userId = _userManager.GetUserId(User);
-            if (string.IsNullOrEmpty(userId)) return Unauthorized("User not authenticated.");
+            //var userId = _userManager.GetUserId(User);
+            //if (string.IsNullOrEmpty(userId)) return Unauthorized("User not authenticated.");
+            var userId = "35c3ff58-9db5-4b77-8570-7e630b16becc";
 
             var result = await _postService.LikePost(postId, userId);
             return result ? Ok("Post liked.") : BadRequest("Failed to like post.");
@@ -36,8 +37,9 @@ namespace BrainHope_.Api.Controllers
         [HttpDelete("{postId}")]
         public async Task<IActionResult> UnlikePost(int postId)
         {
-            var userId = _userManager.GetUserId(User);
-            if (string.IsNullOrEmpty(userId)) return Unauthorized("User not authenticated.");
+            //var userId = _userManager.GetUserId(User);
+            //if (string.IsNullOrEmpty(userId)) return Unauthorized("User not authenticated.");
+            var userId = "35c3ff58-9db5-4b77-8570-7e630b16becc";
 
             var result = await _postService.UnlikePost(postId, userId);
             return result ? Ok("Post unliked.") : BadRequest("Failed to unlike post.");

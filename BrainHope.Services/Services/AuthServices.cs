@@ -287,7 +287,8 @@ namespace BrainHope.Services.Services
 
         public async Task<ApiResponse<List<string>>> AssignRoleToUserAsync(List<string> roles, ApplicationUser user)
         {
-            var assignedRole = new List<string>();
+            var assignedRoles = new List<string>();
+
             foreach (var role in roles)
             {
                 if (await _roleManager.RoleExistsAsync(role))
@@ -295,21 +296,60 @@ namespace BrainHope.Services.Services
                     if (!await _userManager.IsInRoleAsync(user, role))
                     {
                         await _userManager.AddToRoleAsync(user, role);
-                        assignedRole.Add(role);
+                        assignedRoles.Add(role);
+                    }
+
+                    // Custom logic to add user to appropriate table
+                    switch (role.ToLower())
+                    {
+                        case "doctor":
+                            var existingDoctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == user.Id);
+                            if (existingDoctor == null)
+                            {
+                                _context.Doctors.Add(new Doctor
+                                {
+                                    UserId = user.Id,
+                                    Rate = 0,
+                                    CalendlyLink = null
+                                });
+                            }
+                            break;
+
+                        case "admin":
+                            var existingAdmin = await _context.Admins.FirstOrDefaultAsync(a => a.UserId == user.Id);
+                            if (existingAdmin == null)
+                            {
+                                _context.Admins.Add(new Admin
+                                {
+                                    UserId = user.Id
+                                });
+                            }
+                            break;
+
+                        case "patient":
+                            var existingPatient = await _context.Patients.FirstOrDefaultAsync(p => p.UserId == user.Id);
+                            if (existingPatient == null)
+                            {
+                                _context.Patients.Add(new Patient
+                                {
+                                    UserId = user.Id
+                                });
+                            }
+                            break;
                     }
                 }
             }
+
+            await _context.SaveChangesAsync();
 
             return new ApiResponse<List<string>>
             {
                 IsSuccess = true,
                 StatusCode = 200,
-                Message = "Roles has been assigned"
-            ,
-                Response = assignedRole
+                Message = "Roles have been assigned and user registered in respective table(s).",
+                Response = assignedRoles
             };
         }
-
 
 
         public async Task<ApiResponse<List<UserDetailsDTO>>> GetAllUsersAsync()

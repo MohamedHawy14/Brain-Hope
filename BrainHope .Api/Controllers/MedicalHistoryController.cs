@@ -16,8 +16,8 @@ namespace BrainHope_.Api.Controllers
         {
             _unitOfWork = unitOfWork;
         }
-        [HttpPost("add")]
-        public async Task<IActionResult> Add(string patientId, [FromForm] MedicalHistoryDTO dto)
+        [HttpPost("add/{patientId}")]
+        public async Task<IActionResult> Add( string patientId, [FromForm] MedicalHistoryDTO dto)
         {
             var repo = _unitOfWork.Repository<MedicalHistory>();
 
@@ -42,7 +42,6 @@ namespace BrainHope_.Api.Controllers
             repo.Add(history);
             await _unitOfWork.Complete();
 
-            // Create new DTO to return
             var resultDto = new MedicalHistoryDTO
             {
                 ChronicDiseases = history.ChronicDiseases,
@@ -57,6 +56,7 @@ namespace BrainHope_.Api.Controllers
 
             return Ok(resultDto);
         }
+
         [HttpGet("get/{patientId}")]
         public IActionResult GetMedicalHistory( string patientId)
         {

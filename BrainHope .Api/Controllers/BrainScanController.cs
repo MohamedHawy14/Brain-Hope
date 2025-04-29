@@ -19,9 +19,9 @@ public class BrainScanController : ControllerBase
         _brainScanService = brainScanService;
     }
 
-    [HttpPost("scan")]
+    [HttpPost("scan/{userId}")]
     //[Authorize(Roles = SD.Role_Patient)]
-    public async Task<IActionResult> AnalyzeBrainScan([FromForm] BrainScanImageDTO dto, [FromQuery] string userId)
+    public async Task<IActionResult> AnalyzeBrainScan([FromForm] BrainScanImageDTO dto,  string userId)
     {
         if (string.IsNullOrEmpty(userId))
             return BadRequest("User ID is required.");

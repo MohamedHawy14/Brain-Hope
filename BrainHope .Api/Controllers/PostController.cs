@@ -50,8 +50,8 @@ namespace BrainHope_.Api.Controllers
         [HttpPost("Create")]
         public async Task<IActionResult> CreatePost([FromForm] CreatePostDto dto)
         {
-            //var doctorId = _userManager.GetUserId(User);
-            //if (string.IsNullOrEmpty(doctorId)) return Unauthorized("User not authenticated.");
+        //    var doctorId = _userManager.GetUserId(User);
+        //    if (string.IsNullOrEmpty(doctorId)) return Unauthorized("User not authenticated.");
 
             var doctorId = "35c3ff58-9db5-4b77-8570-7e630b16becc";
 
@@ -72,7 +72,7 @@ namespace BrainHope_.Api.Controllers
             //var doctorId = _userManager.GetUserId(User);
             //if (string.IsNullOrEmpty(doctorId)) return Unauthorized("User not authenticated.");
 
-            var doctorId = "35c3ff58-9db5-4b77-8570-7e630b16becc";
+           var doctorId = "35c3ff58-9db5-4b77-8570-7e630b16becc";
 
             var updatedPost = await _postService.UpdatePost(id, dto, doctorId);
 
