@@ -10,7 +10,7 @@ namespace BrainHope_.Api.Controllers
 {
     //[Authorize]
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("like/[controller]")]
     public class LikesController : ControllerBase
     {
         private readonly IPostService _postService;
