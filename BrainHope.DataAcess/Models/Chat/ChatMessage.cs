@@ -10,10 +10,8 @@ using Utilites;
 
 namespace BrainHope.DataAcess.Models.Chat
 {
-    public class ChatMessage
+    public class ChatMessage:ModelBase
     {
-        [Key]
-        public int Id { get; set; }
 
         [Required]
         public string SenderId { get; set; } // FK from AspNetUsers

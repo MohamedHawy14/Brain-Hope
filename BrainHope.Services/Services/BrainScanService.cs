@@ -68,7 +68,7 @@ namespace BrainHope.Services.Services
             // Save scan result to DB
             var scanResult = new BrainScanResult
             {
-                PatientId = userId,
+                UserId = userId,
                 ImageName = imageUrl,
                 PredictionResult = prediction,
                 ScanDate = DateTime.UtcNow

@@ -8,10 +8,9 @@ using System.Threading.Tasks;
 
 namespace BrainHope.DataAcess.Models.Chat
 {
-    public class UserConnection
+    public class UserConnection:ModelBase
     {
-        [Key]
-        public int Id { get; set; }
+       
         public string UserId { get; set; } 
         [ForeignKey("UserId")]
         public ApplicationUser User { get; set; } 

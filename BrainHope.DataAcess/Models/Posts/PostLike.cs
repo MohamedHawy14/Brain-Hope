@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace BrainHope.DataAcess.Models.Posts
 {
-    public class PostLike
+    public class PostLike:ModelBase
     {
-        public int Id { get; set; }
+      
         public int PostId { get; set; }
         public string UserId { get; set; }
 

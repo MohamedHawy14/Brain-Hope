@@ -13,10 +13,10 @@ namespace BrainHope.DataAcess.Models.AiModel
     
 
         [Required]
-        public string PatientId { get; set; } // FK to ApplicationUser.Id
+        public string UserId { get; set; } // FK to ApplicationUser.Id
 
         [ForeignKey("PatientId")]
-        public ApplicationUser Patient { get; set; }
+        public ApplicationUser User { get; set; }
 
         [Required]
         public string ImageName { get; set; }

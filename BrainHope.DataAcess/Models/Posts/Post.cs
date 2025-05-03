@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace BrainHope.DataAcess.Models.Posts
 {
-    public class Post
+    public class Post:ModelBase
     {
-        public int Id { get; set; }
+        
         public string DoctorId { get; set; } // Only doctors can create posts
         public string Title { get; set; }
         public string Content { get; set; }
