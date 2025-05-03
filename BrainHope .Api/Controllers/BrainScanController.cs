@@ -20,7 +20,6 @@ public class BrainScanController : ControllerBase
     }
 
     [HttpPost("scan/{userId}")]
-    //[Authorize(Roles = SD.Role_Patient)]
     public async Task<IActionResult> AnalyzeBrainScan([FromForm] BrainScanImageDTO dto,  string userId)
     {
         if (string.IsNullOrEmpty(userId))

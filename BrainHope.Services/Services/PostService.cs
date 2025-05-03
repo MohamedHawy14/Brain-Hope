@@ -1,4 +1,5 @@
-﻿using BrainHope.DataAcess.Models.Posts;
+﻿using BrainHope.DataAcess.Contexts;
+using BrainHope.DataAcess.Models.Posts;
 using BrainHope.DataAcess.Repositry.IRepository;
 using BrainHope.Services.DTO.Posts;
 using BrainHope.Services.Hubs;
@@ -16,46 +17,84 @@ namespace BrainHope.Services.Services
 {
     public class PostService : IPostService
     {
-        private readonly IPostRepository _postRepository;
+        private readonly BrainHopeDbContext _context;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IHubContext<PostHub> _postHub;
 
-        public PostService(IPostRepository postRepository, IUnitOfWork unitOfWork, IHubContext<PostHub> postHub)
+        public PostService(BrainHopeDbContext context, IUnitOfWork unitOfWork, IHubContext<PostHub> postHub)
         {
-            _postRepository = postRepository;
+            _context = context;
             _unitOfWork = unitOfWork;
             _postHub = postHub;
         }
 
         public async Task<IEnumerable<PostDto>> GetAllPosts()
         {
-            var posts = await _postRepository.GetAllPostsAsync();
+            var posts = await _context.Posts
+                .Include(p => p.Doctor)
+                .Include(p => p.Likes)
+                .Include(p => p.Comments)
+                    .ThenInclude(c => c.User)
+                .ToListAsync();
+
             return posts.Select(post => new PostDto
             {
                 Id = post.Id,
                 DoctorId = post.DoctorId,
-                Title=post.Title,
+                DoctorName = post.Doctor.UserName,
+                DoctorPhoto = post.Doctor.ProfilePhoto,
+                Title = post.Title,
                 Content = post.Content,
                 ImageUrl = post.ImageUrl,
                 CreatedAt = post.CreatedAt,
                 LikesCount = post.Likes.Count,
-                CommentsCount = post.Comments.Count
+                CommentsCount = post.Comments.Count,
+                Comments = post.Comments.Select(comment => new CommentDto
+                {
+                    Id = comment.Id,
+                    PostId = comment.PostId,
+                    UserId = comment.UserId,
+                    UserName = comment.User.UserName,
+                    UserPhoto = comment.User.ProfilePhoto,
+                    Content = comment.Content,
+                    CreatedAt = comment.CreatedAt
+                }).ToList()
             });
         }
 
         public async Task<PostDto> GetPostById(int id)
         {
-            var post = await _postRepository.GetPostByIdAsync(id);
-            return post == null ? null : new PostDto
+            var post = await _context.Posts
+                .Include(p => p.Doctor)
+                .Include(p => p.Likes)
+                .Include(p => p.Comments)
+                    .ThenInclude(c => c.User)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (post == null) return null;
+
+            return new PostDto
             {
                 Id = post.Id,
-                Title=post.Title,
                 DoctorId = post.DoctorId,
+                DoctorName = post.Doctor.UserName,
+                DoctorPhoto = post.Doctor.ProfilePhoto,
+                Title = post.Title,
                 Content = post.Content,
                 ImageUrl = post.ImageUrl,
                 CreatedAt = post.CreatedAt,
                 LikesCount = post.Likes.Count,
-                CommentsCount = post.Comments.Count
+                CommentsCount = post.Comments.Count,
+                Comments = post.Comments.Select(comment => new CommentDto
+                {
+                    Id = comment.Id,
+                    PostId = comment.PostId,
+                    UserId = comment.UserId,
+                    UserName = comment.User.UserName,
+                    UserPhoto = comment.User.ProfilePhoto,
+                    Content = comment.Content,
+                    CreatedAt = comment.CreatedAt
+                }).ToList()
             };
         }
 
@@ -84,39 +123,43 @@ namespace BrainHope.Services.Services
                 CreatedAt = DateTime.UtcNow
             };
 
-            await _postRepository.AddPostAsync(post);
+            _context.Posts.Add(post);
             await _unitOfWork.Complete();
 
             await _postHub.Clients.All.SendAsync("ReceivePostUpdate", post.Id);
 
-            // Convert the created post to PostDto
+            var doctor = await _context.Users.FindAsync(doctorId);
+
             return new PostDto
             {
                 Id = post.Id,
                 DoctorId = post.DoctorId,
+                DoctorName = doctor?.UserName,
+                DoctorPhoto = doctor?.ProfilePhoto,
                 Title = post.Title,
                 Content = post.Content,
                 ImageUrl = post.ImageUrl,
                 CreatedAt = post.CreatedAt,
-                LikesCount = 0, // Default to 0 since it's a new post
-                CommentsCount = 0 // Default to 0 since it's a new post
+                LikesCount = 0,
+                CommentsCount = 0,
+                Comments = new List<CommentDto>()
             };
         }
 
-
         public async Task<PostDto?> UpdatePost(int id, UpdatePostDto dto, string doctorId)
         {
-            var post = await _postRepository.GetPostByIdAsync(id);
-            if (post == null || post.DoctorId != doctorId)
-            {
-                return null; // Post not found or unauthorized
-            }
+            var post = await _context.Posts
+                .Include(p => p.Likes)
+                .Include(p => p.Comments)
+                    .ThenInclude(c => c.User)
+                .FirstOrDefaultAsync(p => p.Id == id);
 
-            // Keep old values if new ones are not provided
+            if (post == null || post.DoctorId != doctorId) return null;
+
             post.Title = string.IsNullOrWhiteSpace(dto.Title) ? post.Title : dto.Title;
             post.Content = string.IsNullOrWhiteSpace(dto.Content) ? post.Content : dto.Content;
 
-            if (dto.ImageUrl != null) // If a new image is uploaded, update it
+            if (dto.ImageUrl != null)
             {
                 try
                 {
@@ -130,95 +173,114 @@ namespace BrainHope.Services.Services
 
             await _unitOfWork.Complete();
 
+            var doctor = await _context.Users.FindAsync(doctorId);
+
             return new PostDto
             {
                 Id = post.Id,
                 DoctorId = post.DoctorId,
+                DoctorName = doctor?.UserName,
+                DoctorPhoto = doctor?.ProfilePhoto,
                 Title = post.Title,
                 Content = post.Content,
                 ImageUrl = post.ImageUrl,
                 CreatedAt = post.CreatedAt,
                 LikesCount = post.Likes.Count(),
-                CommentsCount = post.Comments.Count()
+                CommentsCount = post.Comments.Count(),
+                Comments = post.Comments.Select(comment => new CommentDto
+                {
+                    Id = comment.Id,
+                    PostId = comment.PostId,
+                    UserId = comment.UserId,
+                    UserName = comment.User.UserName,
+                    UserPhoto = comment.User.ProfilePhoto,
+                    Content = comment.Content,
+                    CreatedAt = comment.CreatedAt
+                }).ToList()
             };
         }
 
         public async Task<bool> DeletePost(int id, string doctorId)
         {
-            var post = await _postRepository.GetPostByIdAsync(id);
+            var post = await _context.Posts.FindAsync(id);
             if (post == null || post.DoctorId != doctorId) return false;
 
-            await _postRepository.DeletePost(post); 
+            _context.Posts.Remove(post);
             await _unitOfWork.Complete();
             return true;
         }
 
-        public async Task<bool> LikePost(int postId, string userId)
+        public async Task<bool> PostExists(int postId)
         {
-            var post = await _postRepository.GetPostByIdAsync(postId);
-            if (post == null) return false;
-
-            // Check if the like already exists
-            var existingLike = await _postRepository.GetLikeAsync(postId, userId);
-            if (existingLike) return false; // Prevent duplicate likes
-
-            await _postRepository.AddLike(postId, userId);
-            await _unitOfWork.Complete();
-            await _postHub.Clients.All.SendAsync("ReceiveLikeUpdate", postId, userId);
-            return true;
+            return await _context.Posts.AnyAsync(p => p.Id == postId);
         }
 
-        public async Task<bool> UnlikePost(int postId, string userId)
+        public async Task<bool> LikePost(PostLikeDto dto)
         {
-            // Ensure the like exists before removing
-            var likeExists = await _postRepository.GetLikeAsync(postId, userId);
-            if (!likeExists) return false; // If the like doesn't exist, no need to remove
+            var existingLike = await _context.Likes
+                .AnyAsync(l => l.PostId == dto.PostId && l.UserId == dto.UserId);
 
-            await _postRepository.RemoveLike(postId, userId);
+            if (existingLike)
+                return false;
+
+            _context.Likes.Add(new PostLike { PostId = dto.PostId, UserId = dto.UserId });
             await _unitOfWork.Complete();
-            await _postHub.Clients.All.SendAsync("ReceiveUnlikeUpdate", postId, userId);
+
+            await _postHub.Clients.All.SendAsync("ReceiveLikeUpdate", dto.PostId, dto.UserId);
             return true;
         }
 
+        public async Task<bool> UnlikePost(PostLikeDto dto)
+        {
+            var like = await _context.Likes
+                .FirstOrDefaultAsync(l => l.PostId == dto.PostId && l.UserId == dto.UserId);
 
-        public async Task AddComment(CommentDto dto, string userId)
+            if (like == null)
+                return false;
+
+            _context.Likes.Remove(like);
+            await _unitOfWork.Complete();
+
+            await _postHub.Clients.All.SendAsync("ReceiveUnlikeUpdate", dto.PostId, dto.UserId);
+            return true;
+        }
+
+        public async Task<Comment> AddComment(CreateCommentDto dto, string userId)
         {
             var comment = new Comment
             {
-                PostId = dto.PostId, 
+                PostId = dto.PostId,
                 UserId = userId,
-                Content = dto.Content
+                Content = dto.Content,
+                CreatedAt = DateTime.UtcNow
             };
 
-            await _postRepository.AddComment(comment);
+            _context.Comments.Add(comment);
             await _unitOfWork.Complete();
 
             await _postHub.Clients.All.SendAsync("ReceiveCommentUpdate", comment.PostId, comment.Id, comment.Content);
+            return comment;
         }
 
-        public async Task<bool> UpdateComment(int commentId, string userId, string content)
+        public async Task<bool> UpdateComment(int commentId, string userId, UpdateCommentDto dto)
         {
-            var comment = await _postRepository.GetCommentByIdAsync(commentId);
-            if (comment == null || comment.UserId != userId) return false; // Ensure user owns the comment
+            var comment = await _context.Comments.FindAsync(commentId);
+            if (comment == null || comment.UserId != userId) return false;
 
-            comment.Content = content;
-            await _postRepository.UpdateComment(comment);
+            comment.Content = dto.Content;
             await _unitOfWork.Complete();
             return true;
         }
 
-
-
-        public async Task<bool> DeleteComment(int commentId, string userId, bool isAdmin)
+        public async Task<bool> DeleteComment(int commentId, string userId)
         {
-            var comment = await _postRepository.GetCommentByIdAsync(commentId);
-            if (comment == null || (comment.UserId != userId && !isAdmin)) return false;
+            var comment = await _context.Comments.FindAsync(commentId);
+            if (comment == null || (comment.UserId != userId)) return false;
 
-            await _postRepository.RemoveComment(comment.Id);  
+            _context.Comments.Remove(comment);
             await _unitOfWork.Complete();
             return true;
         }
-
     }
 
 }

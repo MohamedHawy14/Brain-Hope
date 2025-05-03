@@ -14,87 +14,74 @@ using BrainHope.Services.InterFaces;
 
 namespace BrainHope_.Api.Controllers
 {
-    //[Authorize]
+   // [Authorize]
     [ApiController]
-    [Route("post/[controller]")]
-    public class PostController : ControllerBase
+    [Route("api/[controller]")]
+    public class PostsController : ControllerBase
     {
         private readonly IPostService _postService;
-        private readonly UserManager<ApplicationUser> _userManager;
 
-        public PostController(IPostService postService, UserManager<ApplicationUser> userManager)
+        public PostsController(IPostService postService)
         {
             _postService = postService;
-            _userManager = userManager;
         }
 
-
-        [HttpGet("AllPosts")]
-        public async Task<IActionResult> GetAllPosts()
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
         {
-            return Ok(await _postService.GetAllPosts());
+            var posts = await _postService.GetAllPosts();
+            return Ok(posts);
         }
-
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetPostById(int id)
+        public async Task<IActionResult> GetById(int id)
         {
             var post = await _postService.GetPostById(id);
-            if (post == null)
-                return NotFound("Post not found.");
-
+            if (post == null) return NotFound();
             return Ok(post);
         }
 
-        //[Authorize(Roles = SD.Role_Doctor)]
-        [HttpPost("Create")]
-        public async Task<IActionResult> CreatePost([FromForm] CreatePostDto dto)
+        [HttpPost("CreatePost/{userId}")]
+        public async Task<IActionResult> Create([FromForm] CreatePostDto dto, string userId)
         {
-        //    var doctorId = _userManager.GetUserId(User);
-        //    if (string.IsNullOrEmpty(doctorId)) return Unauthorized("User not authenticated.");
+            var post = await _postService.CreatePost(dto, userId);
+            return CreatedAtAction(nameof(GetById), new { id = post.Id }, post);
+        }
 
-            var doctorId = "35c3ff58-9db5-4b77-8570-7e630b16becc";
+        [HttpPut("UpdatePost/{id}/{userId}")]
+        public async Task<IActionResult> Update(int id, [FromForm] UpdatePostDto dto, string userId)
+        {
+            var post = await _postService.GetPostById(id);
+            if (post == null)
+                return NotFound("Post not found");
 
+            if (post.DoctorId != userId)
+                return StatusCode(403, "You are not authorized to update this post");
 
-
-            var postDto = await _postService.CreatePost(dto, doctorId);
-            if (postDto == null) return BadRequest("Failed to create post.");
-
-            return Ok(postDto);
+            var updated = await _postService.UpdatePost(id, dto, userId);
+            return Ok(updated);
         }
 
 
 
-        //[Authorize(Roles = SD.Role_Doctor)]
-        [HttpPut("Update/{id}")]
-        public async Task<IActionResult> UpdatePost(int id, [FromForm] UpdatePostDto dto)
+
+        [HttpDelete("DeletePost/{id}/{userId}")]
+        public async Task<IActionResult> Delete(int id, string userId)
         {
-            //var doctorId = _userManager.GetUserId(User);
-            //if (string.IsNullOrEmpty(doctorId)) return Unauthorized("User not authenticated.");
+            var post = await _postService.GetPostById(id);
+            if (post == null)
+                return NotFound("Post not found");
 
-           var doctorId = "35c3ff58-9db5-4b77-8570-7e630b16becc";
+            if (post.DoctorId != userId)
+                return StatusCode(403,"You are not authorized to delete this post");
 
-            var updatedPost = await _postService.UpdatePost(id, dto, doctorId);
-
-            return updatedPost != null ? Ok(updatedPost) : NotFound("Post not found or you are not authorized to update it.");
+            var deleted = await _postService.DeletePost(id, userId);
+            return Ok("Post Deleted");
         }
 
-
-
-        //[Authorize(Roles = SD.Role_Doctor)]
-        [HttpDelete("Delete/{id}")]
-        public async Task<IActionResult> DeletePost(int id)
-        {
-            //var doctorId = _userManager.GetUserId(User);
-            //if (string.IsNullOrEmpty(doctorId)) return Unauthorized("User not authenticated.");
-            var doctorId = "35c3ff58-9db5-4b77-8570-7e630b16becc";
-            var result = await _postService.DeletePost(id, doctorId);
-            if (!result) return NotFound("Post not found or unauthorized.");
-
-            return Ok("Post deleted successfully.");
-        }
 
     }
+
 
 
 

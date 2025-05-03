@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Utilites;
 
 namespace BrainHope_.Api.Controllers
@@ -18,10 +19,11 @@ namespace BrainHope_.Api.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
        
 
-        public ProfileController(UserManager<ApplicationUser> userManager)
+        public ProfileController(UserManager<ApplicationUser> userManager )
         {
           
             this._userManager = userManager;
+         
         }
 
         [HttpPost("CompleteUrProfile")]
@@ -132,7 +134,6 @@ namespace BrainHope_.Api.Controllers
                 return NotFound("User not found.");
             }
 
-
             #region Update only provided fields, keep others unchanged
             if (!string.IsNullOrWhiteSpace(updateProfile.UserName))
             {
@@ -152,14 +153,14 @@ namespace BrainHope_.Api.Controllers
             if (!string.IsNullOrWhiteSpace(updateProfile.PhoneNumber))
             {
                 user.PhoneNumber = updateProfile.PhoneNumber;
-            } 
+            }
             #endregion
 
-            // Handle Profile Photo Upload
+            // Handle Profile Photo Upload and replace the old one
             if (updateProfile.ProfilePhoto != null)
             {
-                string photoUrl = await ImageHelper.SaveImageAsync(updateProfile.ProfilePhoto);
-                user.ProfilePhoto = photoUrl; // Store full URL in DB
+                string newPhotoUrl = await ImageHelper.ReplaceImageAsync(user.ProfilePhoto, updateProfile.ProfilePhoto);
+                user.ProfilePhoto = newPhotoUrl; // Update the profile photo URL in the DB
             }
 
             var result = await _userManager.UpdateAsync(user);
@@ -168,8 +169,6 @@ namespace BrainHope_.Api.Controllers
                 var errors = string.Join(", ", result.Errors.Select(e => e.Description));
                 return StatusCode(500, new { message = "Profile update failed.", errors });
             }
-
-            
 
             var updatedProfile = new UserProfileDTO
             {
@@ -183,8 +182,6 @@ namespace BrainHope_.Api.Controllers
 
             return Ok(new { message = "Profile updated successfully.", profile = updatedProfile });
         }
-
-
 
 
 

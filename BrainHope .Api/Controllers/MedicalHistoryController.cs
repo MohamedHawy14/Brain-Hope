@@ -16,6 +16,7 @@ namespace BrainHope_.Api.Controllers
         {
             _unitOfWork = unitOfWork;
         }
+
         [HttpPost("add/{patientId}")]
         public async Task<IActionResult> Add( string patientId, [FromForm] MedicalHistoryDTO dto)
         {
@@ -79,48 +80,8 @@ namespace BrainHope_.Api.Controllers
             };
 
             return Ok(dto);
-        }
+        } 
 
-        //[HttpPut("update")]
-        //public async Task<IActionResult> UpdateMedicalHistory([FromQuery] string patientId, [FromForm] MedicalHistoryEditDTO dto)
-        //{
-        //    var repo = _unitOfWork.Repository<MedicalHistory>();
-        //    var history = repo.Get(h => h.PatientId == patientId);
-
-        //    if (history == null)
-        //        return NotFound("Medical history not found");
-
-        //    // Apply changes only if new values are provided
-        //    if (!string.IsNullOrWhiteSpace(dto.ChronicDiseases)) history.ChronicDiseases = dto.ChronicDiseases;
-        //    if (!string.IsNullOrWhiteSpace(dto.Allergies)) history.Allergies = dto.Allergies;
-        //    if (!string.IsNullOrWhiteSpace(dto.Surgeries)) history.Surgeries = dto.Surgeries;
-        //    if (!string.IsNullOrWhiteSpace(dto.CurrentMedications)) history.CurrentMedications = dto.CurrentMedications;
-        //    if (!string.IsNullOrWhiteSpace(dto.FamilyHistory)) history.FamilyHistory = dto.FamilyHistory;
-        //    if (!string.IsNullOrWhiteSpace(dto.Notes)) history.Notes = dto.Notes;
-
-        //    if (dto.IsSmoker.HasValue) history.IsSmoker = dto.IsSmoker.Value;
-        //    if (dto.DrinksAlcohol.HasValue) history.DrinksAlcohol = dto.DrinksAlcohol.Value;
-
-        //    history.LastUpdated = DateTime.UtcNow;
-
-        //    repo.Update(history);
-        //    await _unitOfWork.Complete();
-
-        //    var meddto = new MedicalHistoryDTO
-        //    {
-        //        ChronicDiseases = history.ChronicDiseases,
-        //        Allergies = history.Allergies,
-        //        Surgeries = history.Surgeries,
-        //        CurrentMedications = history.CurrentMedications,
-        //        FamilyHistory = history.FamilyHistory,
-        //        IsSmoker = history.IsSmoker,
-        //        DrinksAlcohol = history.DrinksAlcohol,
-        //        Notes = history.Notes
-        //    };
-
-
-        //    return Ok(meddto);
-        //}
 
         [HttpPatch("update/{patientId}")]
         public async Task<IActionResult> Update(string patientId, [FromForm] MedicalHistoryEditDTO dto)

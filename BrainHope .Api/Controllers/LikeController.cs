@@ -1,4 +1,5 @@
 ﻿using BrainHope.DataAcess.Models;
+using BrainHope.Services.DTO.Posts;
 using BrainHope.Services.InterFaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -7,42 +8,39 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BrainHope_.Api.Controllers
 {
-    [Route("like/[controller]")]
-    [ApiController]
     //[Authorize]
-    public class LikeController : ControllerBase
+    [ApiController]
+    [Route("api/[controller]")]
+    public class LikesController : ControllerBase
     {
         private readonly IPostService _postService;
-        private readonly UserManager<ApplicationUser> _userManager;
 
-        public LikeController(IPostService postService, UserManager<ApplicationUser> userManager)
+        public LikesController(IPostService postService)
         {
             _postService = postService;
-            _userManager = userManager;
         }
-
-        
-        [HttpPost("{postId}")]
-        public async Task<IActionResult> LikePost(int postId)
+        [HttpPost("like")]
+        public async Task<IActionResult> LikePost([FromForm] PostLikeDto dto)
         {
-            //var userId = _userManager.GetUserId(User);
-            //if (string.IsNullOrEmpty(userId)) return Unauthorized("User not authenticated.");
-            var userId = "35c3ff58-9db5-4b77-8570-7e630b16becc";
+            var postExists = await _postService.PostExists(dto.PostId);
+            if (!postExists)
+                return NotFound("Post not found");
 
-            var result = await _postService.LikePost(postId, userId);
-            return result ? Ok("Post liked.") : BadRequest("Failed to like post.");
+            var result = await _postService.LikePost(dto);
+            return result ? Ok("Post Liked") : BadRequest("Already liked");
         }
 
-       
-        [HttpDelete("{postId}")]
-        public async Task<IActionResult> UnlikePost(int postId)
+        [HttpPost("unlike")]
+        public async Task<IActionResult> UnlikePost([FromForm] PostLikeDto dto)
         {
-            //var userId = _userManager.GetUserId(User);
-            //if (string.IsNullOrEmpty(userId)) return Unauthorized("User not authenticated.");
-            var userId = "35c3ff58-9db5-4b77-8570-7e630b16becc";
+            var postExists = await _postService.PostExists(dto.PostId);
+            if (!postExists)
+                return NotFound("Post not found");
 
-            var result = await _postService.UnlikePost(postId, userId);
-            return result ? Ok("Post unliked.") : BadRequest("Failed to unlike post.");
+            var result = await _postService.UnlikePost(dto);
+            return result ? Ok("Post UnLiked") : NotFound("Like not found");
         }
+
     }
+
 }

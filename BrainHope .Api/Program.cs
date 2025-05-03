@@ -29,7 +29,7 @@ namespace BrainHope_.Api
 
             builder.Services.AddScoped<IPostService, PostService>();
             builder.Services.AddScoped<IBrainScanService, BrainScanService>();
-            builder.Services.AddScoped<IChatBotService, ChatBotService>();
+           
 
 
             //For Entity FrameWork
@@ -44,7 +44,6 @@ namespace BrainHope_.Api
             builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IChatRepository, ChatRepository>();
-            builder.Services.AddScoped<IPostRepository, PostRepository>();
             builder.Services.AddScoped<IApplicationUserRepository, ApplicationUserRepository>();
 
             //signalr

@@ -14,7 +14,7 @@ namespace BrainHope.DataAcess.Repositry.IRepository
         Task <int>  Complete();
 
         IChatRepository ChatRepository { get; }
-        IPostRepository PostRepository { get; }
+      
 
         IApplicationUserRepository ApplicationUserRepository { get; }
     }

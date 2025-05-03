@@ -10,56 +10,62 @@ using Utilites;
 
 namespace BrainHope_.Api.Controllers
 {
-    [Route("comment/[controller]")]
-    [ApiController]
     //[Authorize]
-    public class CommentController : ControllerBase
+    [ApiController]
+    [Route("api/[controller]")]
+    public class CommentsController : ControllerBase
     {
         private readonly IPostService _postService;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public CommentController(IPostService postService, UserManager<ApplicationUser> userManager)
+        public CommentsController(IPostService postService, UserManager<ApplicationUser> userManager)
         {
             _postService = postService;
             _userManager = userManager;
         }
 
-       
-        [HttpPost("AddComment")]
-        public async Task<IActionResult> AddComment([FromForm] CommentDto dto)
+        [HttpPost("Create/{userId}")]
+        public async Task<IActionResult> AddComment(string userId, [FromForm] CreateCommentDto dto)
         {
-            //var userId = _userManager.GetUserId(User);
-            //if (string.IsNullOrEmpty(userId)) return Unauthorized("User not authenticated.");
-            var userId = "35c3ff58-9db5-4b77-8570-7e630b16becc";
+            var comment = await _postService.AddComment(dto, userId);
+            var user = await _userManager.FindByIdAsync(userId);
 
-            await _postService.AddComment(dto, userId);
-            return Ok("Comment added.");
+            var resultDto = new CommentDto
+            {
+                Id = comment.Id,
+                PostId = comment.PostId,
+                UserId = comment.UserId,
+                Content = comment.Content,
+                CreatedAt = comment.CreatedAt,
+                UserName = user?.UserName,
+                UserPhoto = user?.ProfilePhoto
+            };
+
+            return Ok(resultDto);
         }
 
-
-        [HttpPut("comments/{commentId}")]
-        public async Task<IActionResult> UpdateComment(int commentId, [FromBody] UpdateCommentDto dto)
+        [HttpPut("Update/{commentId}/{userId}")]
+        public async Task<IActionResult> UpdateComment(int commentId, string userId, [FromForm] UpdateCommentDto dto)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userId == null) return Unauthorized();
+            var result = await _postService.UpdateComment(commentId, userId, dto);
 
-            var result = await _postService.UpdateComment(commentId, userId, dto.Content);
-            if (!result) return BadRequest("Failed to update comment or unauthorized.");
+            if (!result)
+                return NotFound("Comment not found or you are not authorized to update it.");
 
             return Ok("Comment updated successfully.");
         }
 
-
-
-        [HttpDelete("{commentId}")]
-        public async Task<IActionResult> DeleteComment(int commentId)
+        [HttpDelete("Delete/{commentId}/{userId}")]
+        public async Task<IActionResult> DeleteComment(int commentId, string userId)
         {
-            var userId = _userManager.GetUserId(User);
-            if (string.IsNullOrEmpty(userId)) return Unauthorized("User not authenticated.");
-            var isAdmin = User.IsInRole(SD.Role_Admin);
+            var result = await _postService.DeleteComment(commentId, userId);
 
-            var result = await _postService.DeleteComment(commentId, userId, isAdmin);
-            return result ? Ok("Comment deleted.") : NotFound("Comment not found or unauthorized.");
+            if (!result)
+                return NotFound("Comment not found or you are not authorized to delete it.");
+
+            return Ok("Comment deleted successfully.");
         }
+
     }
+
 }

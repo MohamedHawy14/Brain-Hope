@@ -12,8 +12,6 @@ namespace Utilites
         private static readonly string[] _allowedExtensions = { ".jpg", ".jpeg", ".png" };
         private const long _maxImageSize = 3 * 1024 * 1024; // 3MB
 
-       
-
         public static async Task<string> SaveImageAsync(IFormFile imageFile)
         {
             if (imageFile == null || imageFile.Length == 0)
@@ -21,13 +19,53 @@ namespace Utilites
 
             string extension = Path.GetExtension(imageFile.FileName).ToLower();
 
+            if (!_allowedExtensions.Contains(extension))
+                throw new ArgumentException("Only .jpg, .jpeg, and .png files are allowed.");
+
+            if (imageFile.Length > _maxImageSize)
+                throw new ArgumentException("Image size cannot exceed 3MB.");
+
+            string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+            if (!Directory.Exists(uploadsFolder))
+                Directory.CreateDirectory(uploadsFolder);
+
+            string uniqueFileName = $"{Guid.NewGuid()}{extension}";
+            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await imageFile.CopyToAsync(stream);
+            }
+
+            string baseUrl = "http://braincancer.runasp.net";
+            return $"{baseUrl}/uploads/{uniqueFileName}";
+        }
+
+        // Save new image and remove old one if exists
+        public static async Task<string> ReplaceImageAsync(string oldImageUrl, IFormFile newImageFile)
+        {
+            if (newImageFile == null || newImageFile.Length == 0)
+                throw new ArgumentException("Invalid image file.");
+
+            string extension = Path.GetExtension(newImageFile.FileName).ToLower();
+
             // Validate extension
             if (!_allowedExtensions.Contains(extension))
                 throw new ArgumentException("Only .jpg, .jpeg, and .png files are allowed.");
 
             // Validate size
-            if (imageFile.Length > _maxImageSize)
+            if (newImageFile.Length > _maxImageSize)
                 throw new ArgumentException("Image size cannot exceed 3MB.");
+
+            // Remove old image if exists
+            if (!string.IsNullOrEmpty(oldImageUrl))
+            {
+                var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", oldImageUrl.Replace("http://braincancer.runasp.net", ""));
+                if (File.Exists(oldFilePath))
+                {
+                    File.Delete(oldFilePath); // Delete old image
+                }
+            }
 
             // Ensure directory exists
             string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
@@ -38,21 +76,19 @@ namespace Utilites
             string uniqueFileName = $"{Guid.NewGuid()}{extension}";
             string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
-            // Save file
+            // Save new file
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
-                await imageFile.CopyToAsync(stream);
+                await newImageFile.CopyToAsync(stream);
             }
 
-            // Return full URL instead of just the path
-            string baseUrl = "http://braincancer.runasp.net";  // Change this to your domain
+            
+            string baseUrl = "http://braincancer.runasp.net";  
             return $"{baseUrl}/uploads/{uniqueFileName}";
         }
-
     }
-
-
 }
+
 
 #region old
 //public static async Task<string> SaveImageAsync(IFormFile imageFile)

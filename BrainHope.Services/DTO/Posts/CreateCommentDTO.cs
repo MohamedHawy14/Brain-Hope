@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 namespace BrainHope.Services.DTO.Posts
 {
-    public class UpdateCommentDto
+    public class CreateCommentDto
     {
-        public string? Content { get; set; }
+        public int PostId { get; set; }
+        public string Content { get; set; }
     }
+
 }
