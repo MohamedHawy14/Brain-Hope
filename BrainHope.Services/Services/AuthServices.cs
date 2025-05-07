@@ -297,50 +297,61 @@ namespace BrainHope.Services.Services
                     {
                         await _userManager.AddToRoleAsync(user, role);
                         assignedRoles.Add(role);
-                    }
 
-                    // Custom logic to add user to appropriate table
-                    switch (role.ToLower())
-                    {
-                        case "doctor":
-                            var existingDoctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == user.Id);
-                            if (existingDoctor == null)
-                            {
-                                _context.Doctors.Add(new Doctor
+                        // Add to related table only if not exists
+                        switch (role.ToLower())
+                        {
+                            case "doctor":
+                                var existingDoctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == user.Id);
+                                if (existingDoctor == null)
                                 {
-                                    UserId = user.Id,
-                                    Rate = 0,
-                                    CalendlyLink = null
-                                });
-                            }
-                            break;
+                                    _context.Doctors.Add(new Doctor
+                                    {
+                                        UserId = user.Id,
+                                        Rate = 0,
+                                        CalendlyLink = "" // avoid null
+                                    });
+                                }
+                                break;
 
-                        case "admin":
-                            var existingAdmin = await _context.Admins.FirstOrDefaultAsync(a => a.UserId == user.Id);
-                            if (existingAdmin == null)
-                            {
-                                _context.Admins.Add(new Admin
+                            case "admin":
+                                var existingAdmin = await _context.Admins.FirstOrDefaultAsync(a => a.UserId == user.Id);
+                                if (existingAdmin == null)
                                 {
-                                    UserId = user.Id
-                                });
-                            }
-                            break;
+                                    _context.Admins.Add(new Admin
+                                    {
+                                        UserId = user.Id
+                                    });
+                                }
+                                break;
 
-                        case "patient":
-                            var existingPatient = await _context.Patients.FirstOrDefaultAsync(p => p.UserId == user.Id);
-                            if (existingPatient == null)
-                            {
-                                _context.Patients.Add(new Patient
+                            case "patient":
+                                var existingPatient = await _context.Patients.FirstOrDefaultAsync(p => p.UserId == user.Id);
+                                if (existingPatient == null)
                                 {
-                                    UserId = user.Id
-                                });
-                            }
-                            break;
+                                    _context.Patients.Add(new Patient
+                                    {
+                                        UserId = user.Id
+                                    });
+                                }
+                                break;
+                        }
                     }
                 }
             }
 
             await _context.SaveChangesAsync();
+
+            if (assignedRoles.Count == 0)
+            {
+                return new ApiResponse<List<string>>
+                {
+                    IsSuccess = false,
+                    StatusCode = 400,
+                    Message = "User already has the specified role(s). No new roles were assigned.",
+                    Response = null
+                };
+            }
 
             return new ApiResponse<List<string>>
             {
@@ -350,7 +361,6 @@ namespace BrainHope.Services.Services
                 Response = assignedRoles
             };
         }
-
 
         public async Task<ApiResponse<List<UserDetailsDTO>>> GetAllUsersAsync()
         {

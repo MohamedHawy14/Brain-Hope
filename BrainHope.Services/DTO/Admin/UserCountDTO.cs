@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 
 namespace BrainHope.Services.DTO.Admin
 {
-    public class AssignRoleDTO
+    public class UserCountDTO
     {
-        public string UserId { get; set; }
-        public string RoleId { get; set; }
+        public int TotalUsers { get; set; }
+        public int TotalDoctors { get; set; }
+        public int TotalPatients { get; set; }
     }
+
 }

@@ -16,7 +16,7 @@ namespace BrainHope_.Api.Controllers
 {
     [Route("Admin/[controller]")]
     [ApiController]
-  // [Authorize(Roles =SD.Role_Admin)]
+    [Authorize(Roles =SD.Role_Admin)]
     public class AdminController : ControllerBase
     {
 
@@ -114,38 +114,43 @@ namespace BrainHope_.Api.Controllers
                   new Response { Status = "Error", Message = "This Use Don't Exist." });
 
         }
-
         [HttpPost("AssignRoleToUser")]
-        public async Task<IActionResult> AssignRoleToUser([FromBody] AssignRoleDTO model)
+        public async Task<IActionResult> AssignRoleToUser([FromForm] AssignRoleDTO model)
         {
-            if (string.IsNullOrEmpty(model.NationalId) || string.IsNullOrEmpty(model.RoleId))
+            if (string.IsNullOrEmpty(model.UserId) || string.IsNullOrEmpty(model.RoleId))
             {
-                return BadRequest("National ID and Role ID are required.");
+                return BadRequest("User ID and Role ID are required.");
             }
 
-            // Find user by National ID
-            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.NationalId == model.NationalId);
+            // Get the user
+            var user = await _userManager.FindByIdAsync(model.UserId);
             if (user == null)
-            {
                 return NotFound("User not found.");
-            }
 
-            // Find role by Role ID
-            var role = await _roleManager.Roles.FirstOrDefaultAsync(r => r.Id == model.RoleId);
+            // Get the role
+            var role = await _roleManager.FindByIdAsync(model.RoleId);
             if (role == null)
-            {
                 return NotFound("Role not found.");
-            }
 
-            // Assign role
-            var response = await _authServices.AssignRoleToUserAsync(new List<string> { role.Name }, user);
-            if (!response.IsSuccess)
+            // Check if user already in the role
+            if (!await _userManager.IsInRoleAsync(user, role.Name))
             {
-                return BadRequest(response.Message);
+                var result = await _authServices.AssignRoleToUserAsync(new List<string> { role.Name }, user);
+                if (!result.IsSuccess)
+                    return BadRequest(result.Message);
             }
 
-            return Ok(response);
+            // ✅ Get all roles assigned to the user (حتى لو كانت أكتر من واحدة)
+            var userRoles = await _userManager.GetRolesAsync(user);
+
+            return Ok(new
+            {
+                Message = $"Role '{role.Name}' assigned (if not already assigned).",
+                AllRoles = userRoles
+            });
         }
+
+
 
         [HttpGet("GetAllUsers")]
         public async Task<IActionResult> GetAllUsers()
