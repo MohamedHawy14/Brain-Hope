@@ -72,7 +72,7 @@ namespace BrainHope_.Api.Controllers
                 }
             }
 
-            // Pass profilePhotoPath to the registration service
+            
             var response = await _authServices.CreateUserWithTokenAsync(registerUser, profilePhotoPath);
 
             if (!response.IsSuccess)

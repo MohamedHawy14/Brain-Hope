@@ -47,10 +47,10 @@ namespace BrainHope.Services.Services
             fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg"); // تأكد من نوع الصورة
 
             // Add image content to form-data
-            content.Add(fileContent, "image", image.FileName);  // تأكد من تطابق "image" مع الحقل الذي يتوقعه الخادم
+            content.Add(fileContent, "image", image.FileName); 
 
             // Send POST request to Flask API
-            var response = await client.PostAsync("https://5824-34-91-220-19.ngrok-free.app/predict", content);
+            var response = await client.PostAsync("https://8190-34-90-156-107.ngrok-free.app/predict", content);
 
             if (!response.IsSuccessStatusCode)
             {

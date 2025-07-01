@@ -32,8 +32,7 @@ namespace BrainHope.Services.Services
         private readonly IConfiguration _configuration;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly BrainHopeDbContext _context;
-        //private new List<string> _allowedextention = new List<string> { ".jpg", ".png" };
-        //private long _maxallowImagesize = 3145728;
+        
 
         public AuthServices(UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
